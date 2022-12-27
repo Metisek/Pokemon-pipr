@@ -262,6 +262,7 @@ def write_from_csv_to_json(json_file, csv_file):
         pokemon_data = {
             'pokedex_number': pokedex_number,
             'name': name,
+            'abilities' : abilities,
             'stats' : {
                 "hp" : hp,
                 "defense" : defense,
