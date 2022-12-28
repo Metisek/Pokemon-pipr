@@ -1,6 +1,10 @@
 from pytest import raises
 from classes import BasePokemon
-from classes import MalformedPokemonDataError
+from classes import (MalformedPokemonDataError, 
+                     PokemonDataDoesNotExistError,
+                     BadConversionError,
+                     NotANumberError
+                    )
 import copy
 
 # Global values for testing purposes:
@@ -62,9 +66,9 @@ def test_create_pokemon_reading_values():
     pokemon = BasePokemon(pokedex_number, name, abilities,
                           stats, special_strength, other)
     assert pokemon.get_pokedex_number() == 1
-    assert pokemon.get_hp() == 45
-    assert pokemon.get_attack() == 49
-    assert pokemon.get_types() == ['grass', 'poison']
+    assert pokemon.get_base_hp() == 45
+    assert pokemon.get_base_attack() == 49
+    assert pokemon.get_types() == ('grass', 'poison')
     assert pokemon.get_special_strength_value('bug') == 1.0
     assert pokemon.get_other_value('generation') == 1
 
@@ -76,7 +80,7 @@ def test_create_pokemon_reading_values():
 
 def test_create_pokemon_non_convertable_string_to_int():
     new_pokedex_number = ''
-    with raises(MalformedPokemonDataError):
+    with raises(NotANumberError):
         BasePokemon(new_pokedex_number, name, abilities,
                     stats, special_strength, other)
 
@@ -84,7 +88,7 @@ def test_create_pokemon_non_convertable_string_to_int():
 def test_create_pokemon_hp_stat_non_convertable():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = 'essa'
-    with raises(MalformedPokemonDataError):
+    with raises(NotANumberError):
         BasePokemon(pokedex_number, name, abilities,
                     new_stats, special_strength, other)
 
@@ -92,16 +96,15 @@ def test_create_pokemon_hp_stat_non_convertable():
 def test_create_pokemon_hp_stat_equals_zero():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = 0
-    with raises(MalformedPokemonDataError):
+    with raises(ValueError):
         BasePokemon(pokedex_number, name, abilities,
                     new_stats, special_strength, other)
-
 
 
 def test_create_pokemon_hp_stat_negative():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = -1
-    with raises(MalformedPokemonDataError):
+    with raises(ValueError):
         BasePokemon(pokedex_number, name, abilities,
                     new_stats, special_strength, other)
 
@@ -109,43 +112,6 @@ def test_create_pokemon_hp_stat_negative():
 def test_create_pokemon_hp_stat_is_float():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = 0.5
-    with raises(MalformedPokemonDataError):
+    with raises(BadConversionError):
         BasePokemon(pokedex_number, name, abilities,
                     new_stats, special_strength, other)
-
-
-
-def test_set_attack_typical():
-    pokemon = BasePokemon(pokedex_number, name, abilities,
-                          stats, special_strength, other)
-    assert pokemon.get_attack() == 49
-    pokemon.set_attack(54)
-    assert pokemon.get_attack() == 54
-
- 
-def test_set_attack_equal_zero():
-    pokemon = BasePokemon(pokedex_number, name, abilities,
-                          stats, special_strength, other)
-    with raises(MalformedPokemonDataError):
-        pokemon.set_attack(0)
-
-
-def test_set_attack_negative():
-    pokemon = BasePokemon(pokedex_number, name, abilities,
-                          stats, special_strength, other)
-    with raises(MalformedPokemonDataError):
-        pokemon.set_attack(-2)
-        
-
-def test_set_attack_float():
-    pokemon = BasePokemon(pokedex_number, name, abilities,
-                          stats, special_strength, other)
-    with raises(MalformedPokemonDataError):
-        pokemon.set_attack(2.5)
-        
-
-def test_set_attack_wrong_datatype():
-    pokemon = BasePokemon(pokedex_number, name, abilities,
-                          stats, special_strength, other)
-    with raises(MalformedPokemonDataError):
-        pokemon.set_attack('test')
