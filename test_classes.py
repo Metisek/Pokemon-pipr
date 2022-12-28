@@ -1,6 +1,7 @@
 from pytest import raises
-from classes import BasePokemon
-from classes import (MalformedPokemonDataError, 
+from classes import BasePokemon, GamePokemon
+from classes import (
+                     MalformedPokemonDataError, 
                      PokemonDataDoesNotExistError,
                      BadConversionError,
                      NotANumberError
@@ -55,14 +56,16 @@ other = {
             "generation": "1"
         }
 
+# BasePokemon Class
 
-def test_create_pokemon_typical():
+
+def test_base_pokemon_init():
     pokemon = BasePokemon(pokedex_number, name, abilities,
                           stats, special_strength, other)
     assert pokemon.get_pokedex_number() == 1
 
 
-def test_create_pokemon_reading_values():
+def test_base_pokemon_reading_values():
     pokemon = BasePokemon(pokedex_number, name, abilities,
                           stats, special_strength, other)
     assert pokemon.get_pokedex_number() == 1
@@ -72,20 +75,20 @@ def test_create_pokemon_reading_values():
     assert pokemon.get_special_strength_value('bug') == 1.0
     assert pokemon.get_other_value('generation') == 1
 
-# Odpowiedzialność za brakujące/puste dane zrzucamy na inną funkcję wczytującą
+# Odpowiedzialność za brakujące/puste dane zrzucamy funkcję wczytującą
 # Jest to kluczowe w przypadku każdej zmiennej która ma str oraz list abilities
 # Liczby i tak zostają tu konwertowane dla wygody
 # Klasa jest za to odpowiedzialna za poprawną konwersję typów
 
 
-def test_create_pokemon_non_convertable_string_to_int():
-    new_pokedex_number = ''
+def test_base_pokemon_non_convertable_string_to_int():
+    new_pokedex_number = 'test'
     with raises(NotANumberError):
         BasePokemon(new_pokedex_number, name, abilities,
                     stats, special_strength, other)
 
 
-def test_create_pokemon_hp_stat_non_convertable():
+def test_base_pokemon_hp_stat_non_convertable():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = 'essa'
     with raises(NotANumberError):
@@ -93,7 +96,7 @@ def test_create_pokemon_hp_stat_non_convertable():
                     new_stats, special_strength, other)
 
 
-def test_create_pokemon_hp_stat_equals_zero():
+def test_base_pokemon_hp_stat_equals_zero():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = 0
     with raises(ValueError):
@@ -101,7 +104,7 @@ def test_create_pokemon_hp_stat_equals_zero():
                     new_stats, special_strength, other)
 
 
-def test_create_pokemon_hp_stat_negative():
+def test_base_pokemon_hp_stat_negative():
     new_stats = copy.deepcopy(stats)
     new_stats['hp'] = -1
     with raises(ValueError):
@@ -109,9 +112,216 @@ def test_create_pokemon_hp_stat_negative():
                     new_stats, special_strength, other)
 
 
-def test_create_pokemon_hp_stat_is_float():
+def test_base_pokemon_hp_stat_is_float():
     new_stats = copy.deepcopy(stats)
-    new_stats['hp'] = 0.5
+    new_stats['hp'] = 2.5
     with raises(BadConversionError):
         BasePokemon(pokedex_number, name, abilities,
                     new_stats, special_strength, other)
+
+# Testów dla pozostałych zmiennych nie trzeba pisać bo są podobne
+
+
+def test_base_pokemon_get_special_dict():
+    pokemon = BasePokemon(pokedex_number, name, abilities,
+                          stats, special_strength, other)
+    specials = pokemon.get_special_strength_dict()
+    assert specials['against_bug'] == 1.0
+    assert specials['against_fire'] == 2.0
+
+
+def test_base_pokemon_get_special_vals_typical():
+    pokemon = BasePokemon(pokedex_number, name, abilities,
+                          stats, special_strength, other)
+    assert pokemon.get_special_strength_value('bug') == 1.0
+    assert pokemon.get_special_strength_value('fire') == 2.0
+
+
+def test_base_pokemon_get_special_vals_wrong_type():
+    pokemon = BasePokemon(pokedex_number, name, abilities,
+                          stats, special_strength, other)
+    with raises(PokemonDataDoesNotExistError):
+        pokemon.get_special_strength_value('academic')
+
+
+def test_game_pokemon_init_typical():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon)
+    assert game_pokemon.get_max_hp() == 45
+    assert game_pokemon.get_hp() == 45
+    assert game_pokemon.get_attack() == 49
+    assert game_pokemon.get_defense() == 49
+    assert game_pokemon.get_speed() == 45
+
+
+def test_game_pokemon_init_not_random_other_values():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    assert game_pokemon.get_max_hp() == 45
+    assert game_pokemon.get_gender() == 'Male'
+    assert game_pokemon.get_height() == 0.7
+    assert game_pokemon.get_weight() == 6.9
+
+
+def test_game_pokemon_init_random_other_values(monkeypatch):
+
+    def double_given_value(x, y):
+        return 200
+    monkeypatch.setattr("classes.randint", double_given_value)
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon)
+    assert game_pokemon.get_max_hp() == 45
+    assert game_pokemon.get_gender() == 'Female'
+    assert game_pokemon.get_height() == 1.4
+    assert game_pokemon.get_weight() == 13.8
+
+
+def test_game_pokemon_set_hp_typical():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    assert game_pokemon.get_hp() == 45
+    game_pokemon.set_hp(55)
+    assert game_pokemon.get_hp() == 55
+    assert game_pokemon.get_is_alive() == 1  # True
+
+
+def test_game_pokemon_set_hp_float():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_hp(20.4)
+
+
+def test_game_pokemon_set_hp_zero():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    game_pokemon.set_hp(0)
+    assert game_pokemon.get_hp() == 0
+    assert game_pokemon.get_is_alive() == 0  # False
+
+
+def test_game_pokemon_set_hp_negative():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_hp(-2)
+
+
+def test_game_pokemon_set_max_hp_typical():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    assert game_pokemon.get_max_hp() == 45
+    game_pokemon.set_max_hp(55)
+    assert game_pokemon.get_max_hp() == 55
+
+
+def test_game_pokemon_set_max_hp_lower_than_current_hp():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    assert game_pokemon.get_max_hp() == 45
+    assert game_pokemon.get_hp() == 45
+    game_pokemon.set_max_hp(20)
+    assert game_pokemon.get_max_hp() == 20
+    assert game_pokemon.get_hp() == 20
+
+
+def test_game_pokemon_set_max_hp_float():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_max_hp(20.4)
+
+
+def test_game_pokemon_set_max_hp_zero():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_max_hp(0)
+
+
+def test_game_pokemon_set_max_hp_negative():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_max_hp(-2)
+
+
+def test_game_pokemon_set_attack_typical():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    assert game_pokemon.get_attack() == 49
+    game_pokemon.set_attack(55)
+    assert game_pokemon.get_attack() == 55
+
+
+def test_game_pokemon_set_attack_float():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_attack(20.4)
+
+
+def test_game_pokemon_set_attack_zero():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    game_pokemon.set_attack(0)
+    assert game_pokemon.get_attack() == 0
+
+
+def test_game_pokemon_set_attack_negative():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_attack(-2)
+
+
+def test_game_pokemon_set_defense_typical():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    assert game_pokemon.get_defense() == 49
+    game_pokemon.set_defense(55)
+    assert game_pokemon.get_defense() == 55
+
+
+def test_game_pokemon_set_defense_float():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_defense(20.4)
+
+
+def test_game_pokemon_set_defense_zero():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_defense(0)
+
+
+def test_game_pokemon_set_defense_negative():
+    base_pokemon = BasePokemon(pokedex_number, name, abilities,
+                               stats, special_strength, other)
+    game_pokemon = GamePokemon(base_pokemon, False)
+    with raises(ValueError):
+        game_pokemon.set_defense(-2)
+        
+
+
