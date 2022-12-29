@@ -1,7 +1,7 @@
 from pytest import raises
 from classes import BasePokemon, GamePokemon
 from classes import (
-                     MalformedPokemonDataError, 
+                     MalformedPokemonDataError,
                      PokemonDataDoesNotExistError,
                      BadConversionError,
                      NotANumberError
@@ -322,6 +322,3 @@ def test_game_pokemon_set_defense_negative():
     game_pokemon = GamePokemon(base_pokemon, False)
     with raises(ValueError):
         game_pokemon.set_defense(-2)
-        
-
-

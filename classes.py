@@ -2,15 +2,23 @@ import copy
 from random import randint
 
 
-class MalformedPokemonDataError(ValueError):
+class InvalidDataLineLeghthError(ValueError):
     pass
 
 
-class PokemonDataDoesNotExistError(TypeError):
+class MalformedPokemonDataError(Exception):
+    pass
+
+
+class PokemonDataDoesNotExistError(Exception):
     pass
 
 
 class BadConversionError(ValueError):
+    pass
+
+
+class RedundantKeyError(KeyError):
     pass
 
 
@@ -81,7 +89,7 @@ class BasePokemon:
         """
         for key in special_strength:
             strength_value = special_strength[key]
-            special_strength[key] = self._return_if_positive(
+            special_strength[key] = self._return_if_not_negative(
                 self._convert_to_float(strength_value)
                 )
         for key in other:
@@ -133,16 +141,17 @@ class BasePokemon:
         Returns:
             int: Value as integer.
         """
-        if isinstance(value, float):
-            raise BadConversionError(
-                'Float cannot be mapped to int in this object.'
-                )
         try:
-            return int(value)
+            float_value = float(value)
         except ValueError:
             raise NotANumberError(
                 'Given value cannot be converted to int.'
                 )
+        if float_value != int(value):
+            raise BadConversionError(
+                "Float cannot be mapped (rounded) to int in this instance."
+            )
+        return int(value)
 
     def _convert_to_float(self, value) -> float:
         """ Converts given string, int or float to float
@@ -586,6 +595,4 @@ class GamePokemon(BasePokemon):
         """
         value = self._return_if_positive(self._convert_to_int(value))
         self._defense = value
-
-
 
