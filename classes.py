@@ -92,12 +92,15 @@ class BasePokemon:
             special_strength[key] = self._return_if_not_negative(
                 self._convert_to_float(strength_value)
                 )
-        for key in other:
-            if key != 'generation':
-                other_value = other[key]
-                other[key] = self._return_if_positive(
-                    self._convert_to_float(other_value)
-                    )
+        other['percentage_male'] = self._convert_float_and_check_if_none(
+            other['percentage_male'], 'non-negative'
+            )
+        other['height_m'] = self._convert_float_and_check_if_none(
+            other['height_m'], 'positive'
+            )
+        other['weight_kg'] = self._convert_float_and_check_if_none(
+            other['weight_kg'], 'positive'
+            )
         other['generation'] = self._convert_to_int(other['generation'])
         self._pokedex_number = self._return_if_positive(
             self._convert_to_int(pokedex_number)
@@ -126,6 +129,45 @@ class BasePokemon:
         self._other = other
 
 # Private functions
+
+    def _convert_float_and_check_if_none(
+                self, value: (float | int | str | None),
+                return_instance='positive'
+            ) -> (float | None):
+        """ Returns none if value is None.
+        Checks and returns float after checking given return_instance
+        Throws exception if given value is not a number or None, or if
+        given float does not match return_instance (ex. 0.0 is not positive)
+
+        Args:
+            value (loat | int | str | None): Given float or None value to check
+
+            return_instance (str, optional): Given return_instance:
+            - 'positive': returns number if it's > 0.
+            Throws exception otherwise.
+            - 'non_negative': returns number if it's >= 0.
+            Throws exception otherwise.
+            - anything else: returns number if it's valid.
+            Throws exception otherwise.
+
+            Defaults to 'positive'.
+
+        Raises:
+            NotANumberError: Given non-None value cannot be converted to float
+            ValueError: Given number does not match return_instance condition
+
+        Returns:
+            float | None: None type or value converted to float
+        """
+        if isinstance(value, type(None)):
+            return value
+        if return_instance == 'positive':
+            value = self._return_if_positive(self._convert_to_float(value))
+        elif return_instance == 'non-negative':
+            value = self._return_if_not_negative(self._convert_to_float(value))
+        else:
+            value = self._convert_to_float(value)
+        return value
 
     def _convert_to_int(self, value) -> int:
         """ Converts given string (or int) to int
@@ -373,6 +415,7 @@ class GamePokemon(BasePokemon):
             Keeps then at default if set to false.
             If false, gender is based on "percentage_male" value.
             If greater than 50, sets to Male. Sets to female otherwise.
+            If value is None type, sets to unknown instead
             Defaults to True.
         """
         self.__dict__ = copy.deepcopy(base_pokemon.__dict__)
@@ -383,21 +426,36 @@ class GamePokemon(BasePokemon):
         self._speed = self.get_base_speed()
         self._is_alive = True
         if randomize:
-            if randint(0, 100) < self.get_other_value('percentage_male'):
-                self._gender = 'Male'
+            if not isinstance(
+                        self.get_other_value('percentage_male'), type(None)
+                    ):
+                if randint(1, 99) > self.get_other_value('percentage_male'):
+                    self._gender = 'Male'
+                else:
+                    self._gender = 'Female'
             else:
-                self._gender = 'Female'
-            self._height_m = self._randomize_and_round_float(
-                    self.get_other_value('height_m')
-                )
-            self._weight_kg = self._randomize_and_round_float(
-                    self.get_other_value('weight_kg')
-                )
+                self._gender = 'Unknown'
+
+            self._weight_kg = self.get_other_value('weight_kg')
+            if not isinstance(self.get_weight(), type(None)):
+                self._weight_kg = self._randomize_and_round_float(
+                        self.get_weight(),
+                    )
+            self._height_m = self.get_other_value('height_m')
+            if not isinstance(self.get_height(), type(None)):
+                self._height_m = self._randomize_and_round_float(
+                        self.get_height(),
+                    )
         else:
-            self._gender = str(
-                'Male' if self.get_other_value('percentage_male') > 50
-                else 'Female'
-            )
+            if not isinstance(
+                self.get_other_value('percentage_male'), type(None)
+            ):
+                self._gender = str(
+                    'Male' if self.get_other_value('percentage_male') > 50
+                    else 'Female'
+                )
+            else:
+                self._gender = 'Unknown'
             self._height_m = self.get_other_value('height_m')
             self._weight_kg = self.get_other_value('weight_kg')
 
@@ -595,4 +653,3 @@ class GamePokemon(BasePokemon):
         """
         value = self._return_if_positive(self._convert_to_int(value))
         self._defense = value
-

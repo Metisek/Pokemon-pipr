@@ -8,6 +8,7 @@ from classes import (
     BadConversionError,
     RedundantKeyError
 )
+import io
 from ast import literal_eval
 
 
@@ -80,7 +81,7 @@ def io_convert_string_to_list(value: str) -> list:
         raise BadConversionError('Given string value is not a list')
 
 
-def io_return_if_positive(value: (int | float)):
+def io_return_if_positive(value: (int | float)) -> (int | float):
     """ Returns value if > 0. Throws exception otherwise.
 
     Args:
@@ -100,7 +101,7 @@ def io_return_if_positive(value: (int | float)):
     return value
 
 
-def io_return_if_not_negative(value: (int | float)):
+def io_return_if_not_negative(value: (int | float)) -> (int | float):
     """ Returns value if >= 0. Throws exception otherwise.
 
     Args:
@@ -205,12 +206,14 @@ def io_return_valid_stats_dict(value: dict) -> dict:
         InvalidDataLineLeghthError: Number of given dict is not equal 8.
         PokemonDataDoesNotExistError: Given string value is empty
         RedundantKeyError: Given dict has invalid keys
-        
+
     Returns:
         dict: Stats dictionary with converted values
     """
-    stats_keys = ["hp", "defense", "attack",  "speed", 
-                  "type1", "type2", "classfication", "experience_growth"]
+    stats_keys = [
+                  "hp", "defense", "attack",  "speed",
+                  "type1", "type2", "classfication", "experience_growth"
+                 ]
     if len(value) != 8:
         raise InvalidDataLineLeghthError('Given dict size is not equal 8')
     for key in value.keys():
@@ -275,11 +278,12 @@ def io_return_valid_special_strength_dict(value: dict) -> dict:
         InvalidDataLineLeghthError: Number of given dict is not equal 18.
         PokemonDataDoesNotExistError: Given string value is empty
         RedundantKeyError: Given dict has invalid keys
-    
+
     Returns:
         dict: Special_strength dictionary with converted values
     """
-    special_stregnth_keys = ["against_bug", "against_dark",
+    special_stregnth_keys = [
+                             "against_bug", "against_dark",
                              "against_dragon", "against_electric",
                              "against_fairy", "against_fight",
                              "against_fire", "against_flying",
@@ -303,14 +307,15 @@ def io_return_valid_other_dict(value: dict) -> dict:
     """ Checks if given other dictionary is not corrupted,
     converts values to proper data type and returns it.
     Throws exception if given dict is malformed.
+    height_m and weight_kg values can mapped to None if string is empty
 
     Args:
         value (dict):{
-                    "percentage_male":    float | int -> float | str -> float,
-                    "height_m":           float | int -> float | str -> float,
-                    "weight_kg":          float | int -> float | str -> float,
-                    "generation":         int | str -> int
-                    }
+                "percentage_male": float | int -> float | str -> float,
+                "height_m":        float | int -> float | str -> float | None,
+                "weight_kg":       float | int -> float | str -> float | None,
+                "generation":      int | str -> int
+                }
 
     Raises:
         ValueError: Given int or float value is not greater than 0.
@@ -319,33 +324,67 @@ def io_return_valid_other_dict(value: dict) -> dict:
         InvalidDataLineLeghthError: Number of given dict is not equal 4.
         PokemonDataDoesNotExistError: Given string value is empty
         RedundantKeyError: Given dict has invalid keys
-    
+
     Returns:
         dict: Other dictionary with converted values
     """
-    other_keys = ["percentage_male", "height_m",
-                  "weight_kg", "generation"
-                 ]
+    other_keys = [
+                   "percentage_male", "height_m",
+                   "weight_kg", "generation"
+                  ]
     if len(value) != 4:
         raise InvalidDataLineLeghthError('Given dict size is not equal 4')
     for key in value:
         check_if_valid_key(key, other_keys)
-    value["percentage_male"] = io_return_if_positive(
-            io_convert_to_float(value["percentage_male"])
-            )
-    value["height_m"] = io_return_if_positive(
-            io_convert_to_float(value["height_m"])
-            )
-    value["weight_kg"] = io_return_if_positive(
+    if not value["percentage_male"]:
+        value["percentage_male"] = None
+    else:
+        value["percentage_male"] = io_return_if_not_negative(
+                io_convert_to_float(value["percentage_male"])
+                )
+    if not value["weight_kg"]:
+        value["weight_kg"] = None
+    else:
+        value["weight_kg"] = io_return_if_positive(
             io_convert_to_float(value["weight_kg"])
             )
-    value["generation"] = io_return_if_positive(
-            io_convert_to_int(value["generation"])
+    if not value["height_m"]:
+        value["height_m"] = None
+    else:
+        value["height_m"] = io_return_if_positive(
+            io_convert_to_float(value["weight_kg"])
             )
     return value
 
 
-def read_from_json(file_hantle):
+def read_from_json(file_hantle: io.TextIOWrapper) -> list:
+    """ Reads every item in json file, check if it's not corrupted
+    and returns list of every base pokemon if no corrupted data was found.
+    Throws exception otherwise.
+
+    Args:
+        file_hantle (io.TextIOWrapper): file_hantle variable from json file.
+
+    Raises:
+        MalformedPokemonDataError: returns type of data corruption and
+        row where it was found.
+
+        Types of data corruption:
+        -  BadConversionError: Given value cannot be converted to other
+        datatype (example: 'test' to int or 0.5 to int).
+        - PokemonDataDoesNotExistError: Important key's value is empty
+        (example: 'name': '').
+        - NotANumberError: Given value cannot be converted to number
+        - ValueError: Given value does not meet given criteria
+        (example: attack value cannot be smaller or equal 0).
+        - InvalidDataLineLeghthError: Given collection size does not
+        meet given criteria (example: other_dict must have 4 keys).
+        - RedundantKeyError: Given key is not in given collection
+        (example: stats['type3'] is prohibited).
+
+    Returns:
+        list: List of BasePokemon objects.
+    """
     data = json.load(file_hantle)
     pokemon_list = []
     try:

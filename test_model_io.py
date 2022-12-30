@@ -1,8 +1,6 @@
 from model_io import (
     read_from_json,
     io_return_if_valid_string,
-    io_convert_to_float,
-    io_convert_to_int,
     io_return_if_positive,
     io_return_if_not_negative,
     io_return_if_valid_abilities_as_list,
@@ -10,7 +8,7 @@ from model_io import (
     io_return_valid_special_strength_dict
 )
 from classes import (
-    MalformedPokemonDataError,
+    # MalformedPokemonDataError,
     InvalidDataLineLeghthError,
     PokemonDataDoesNotExistError,
     NotANumberError,
@@ -18,7 +16,7 @@ from classes import (
     RedundantKeyError
 )
 from io import StringIO
-from classes import BasePokemon
+# from classes import BasePokemon
 import copy
 from pytest import raises
 
@@ -103,7 +101,7 @@ test_special_strength = {
     "against_psychic": "2",
     "against_rock": "1",
     "against_steel": "1",
-    "against_water": "0.5"    
+    "against_water": "0.5"
 }
 test_other = {
     "percentage_male": "88.1",
@@ -115,6 +113,7 @@ fake_database = []
 fake_stats = {}
 fake_special_strengt = {}
 fake_other = {}
+
 
 def test_model_io_return_if_valid_string_typical():
     io_return_if_valid_string('Labolatorium')
@@ -256,9 +255,7 @@ def test_model_io_return_valid_special_strength_dict_typical():
     special_strength_dict = io_return_valid_special_strength_dict(
         test_special_strength
         )
-    # assert special_strength_dict['hp'] == 45
-    # assert special_strength_dict['attack'] == 49
-    # assert special_strength_dict['defense'] == 49
+    assert special_strength_dict['against_bug'] == 1
 
 
 def test_model_io_return_valid_special_strength_dict_float_as_str():
@@ -303,5 +300,4 @@ def test_model_io_read_from_json_check_full_data():
     file_hantle.close()
     assert len(data) == 801
     assert data[0].get_base_hp() == 45
-    assert data[800].get_name() == 'Necrozma'
-    
+    assert data[799].get_name() == 'Necrozma'
