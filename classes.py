@@ -38,7 +38,7 @@ class BasePokemon:
     def __init__(self,
                  pokedex_number: (str | int),
                  name: str,
-                 abilities: (list | tuple),
+                 abilities: (list[str] | tuple[str]),
                  stats: dict,
                  special_strength: dict,
                  other: dict):
@@ -321,7 +321,7 @@ class BasePokemon:
         """
         return self._base_speed
 
-    def get_types(self) -> tuple:
+    def get_types(self) -> tuple[str, str | None]:
         """ Gets both private pokemon types inside tuple and returns it.
         Second type can be None instead of string value if it doesn't exist.
 

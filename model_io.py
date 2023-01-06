@@ -368,7 +368,7 @@ def io_return_valid_other_dict(value: dict) -> dict:
     return value
 
 
-def read_from_json(file_hantle: io.TextIOWrapper) -> list:
+def read_from_json(file_hantle: io.TextIOWrapper) -> list[BasePokemon]:
     """ Reads every item in json file, check if it's not corrupted
     and returns list of every base pokemon if no corrupted data was found.\n
     Throws exception otherwise.

@@ -312,7 +312,7 @@ def test_model_io_return_valid_other_dict_empty_values_except_generation():
     assert other_dict['weight_kg'] is None
     assert other_dict['height_m'] is None
 
-    
+
 def test_model_io_return_valid_other_dict_empty_generation():
     fake_other = copy.deepcopy(test_other)
     fake_other['generation'] = ''
