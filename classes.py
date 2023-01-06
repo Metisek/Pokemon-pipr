@@ -14,6 +14,10 @@ class PokemonDataDoesNotExistError(Exception):
     pass
 
 
+class DataDoesNotExistError(Exception):
+    pass
+
+
 class BadConversionError(ValueError):
     pass
 
@@ -380,7 +384,7 @@ class BasePokemon:
         """
         return self._other
 
-    def get_other_value(self, other_dict_key) -> (int | float):
+    def get_other_value(self, other_dict_key) -> (int | float | None):
         """ Gets specific pokemon's value from other dictionary with given arg.
         Returns it if type exist, otherwise throws exception.
 
@@ -391,7 +395,7 @@ class BasePokemon:
             PokemonDataDoesNotExistError: Given key does not exist in other.
 
         Returns:
-            float or int: Value of given dictionary's key.
+            int | float | None: Value of given dictionary's key.
         """
         try:
             return self._other[other_dict_key]

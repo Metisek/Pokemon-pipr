@@ -5,7 +5,8 @@ from model_io import (
     io_return_if_not_negative,
     io_return_if_valid_abilities_as_list,
     io_return_valid_stats_dict,
-    io_return_valid_special_strength_dict
+    io_return_valid_special_strength_dict,
+    io_return_valid_other_dict
 )
 from classes import (
     # MalformedPokemonDataError,
@@ -285,6 +286,53 @@ def test_model_io_return_valid_special_strength_dict_wrong_keys():
     fake_special_strength['pipr_jest_spoko'] = '0.25'
     with raises(RedundantKeyError):
         io_return_valid_special_strength_dict(fake_special_strength)
+
+
+def test_model_io_return_valid_other_dict_typical():
+    other_dict = io_return_valid_other_dict(
+        test_other
+        )
+    assert other_dict['percentage_male'] == 88.1
+
+
+def test_model_io_return_valid_other_dict_float_as_str():
+    fake_other = copy.deepcopy(test_other)
+    fake_other['percentage_male'] = 'test'
+    with raises(NotANumberError):
+        io_return_valid_other_dict(fake_other)
+
+
+def test_model_io_return_valid_other_dict_empty_values_except_generation():
+    fake_other = copy.deepcopy(test_other)
+    fake_other['percentage_male'] = ''
+    fake_other['weight_kg'] = ''
+    fake_other['height_m'] = ''
+    other_dict = io_return_valid_other_dict(fake_other)
+    assert other_dict['percentage_male'] is None
+    assert other_dict['weight_kg'] is None
+    assert other_dict['height_m'] is None
+
+    
+def test_model_io_return_valid_other_dict_empty_generation():
+    fake_other = copy.deepcopy(test_other)
+    fake_other['generation'] = ''
+    with raises(NotANumberError):
+        io_return_valid_other_dict(fake_other)
+
+
+def test_model_io_return_valid_other_dict_invalid_keys_count():
+    fake_other = copy.deepcopy(test_other)
+    fake_other['pipr_jest_spoko'] = '0.25'
+    with raises(InvalidDataLineLeghthError):
+        io_return_valid_other_dict(fake_other)
+
+
+def test_model_io_return_valid_other_dict_dict_wrong_keys():
+    fake_other = copy.deepcopy(test_other)
+    fake_other.pop('generation')
+    fake_other['pipr_jest_spoko'] = '0.25'
+    with raises(RedundantKeyError):
+        io_return_valid_other_dict(fake_other)
 
 
 def test_model_io_read_from_json_test_database():

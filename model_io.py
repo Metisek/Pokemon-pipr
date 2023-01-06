@@ -28,11 +28,14 @@ def io_convert_to_int(value: (int | str)) -> int:
     """
     try:
         float_value = float(value)
-        if float_value != int(value):
-            raise BadConversionError(
+        int_value = int(float_value)
+        if float_value != int_value:
+            raise BadConversionError
+        return int(value)
+    except BadConversionError:
+        raise BadConversionError(
                 "Float cannot be mapped (rounded) to int in this instance."
                 )
-        return int(value)
     except ValueError:
         raise NotANumberError(
             'Given value cannot be converted to int.'
@@ -203,7 +206,7 @@ def io_return_valid_stats_dict(value: dict) -> dict:
         ValueError: Given int or float value is not greater than 0.
         NotANumberError: Given value is not a number.
         BadConversionError: Given value cannot be converted to given data type.
-        InvalidDataLineLeghthError: Number of given dict is not equal 8.
+        InvalidDataLineLeghthError: Number of given dict keys is not equal 8.
         PokemonDataDoesNotExistError: Given string value is empty
         RedundantKeyError: Given dict has invalid keys
 
@@ -275,7 +278,7 @@ def io_return_valid_special_strength_dict(value: dict) -> dict:
         ValueError: Given int or float value is not greater or equal 0.
         NotANumberError: Given value is not a number.
         BadConversionError: Given value cannot be converted to given data type.
-        InvalidDataLineLeghthError: Number of given dict is not equal 18.
+        InvalidDataLineLeghthError: Number of given dict keys is not equal 18.
         PokemonDataDoesNotExistError: Given string value is empty
         RedundantKeyError: Given dict has invalid keys
 
@@ -321,7 +324,7 @@ def io_return_valid_other_dict(value: dict) -> dict:
         ValueError: Given int or float value is not greater than 0.
         NotANumberError: Given value is not a number.
         BadConversionError: Given value cannot be converted to given data type.
-        InvalidDataLineLeghthError: Number of given dict is not equal 4.
+        InvalidDataLineLeghthError: Number of given dict keys is not equal 4.
         PokemonDataDoesNotExistError: Given string value is empty
         RedundantKeyError: Given dict has invalid keys
 
@@ -352,7 +355,13 @@ def io_return_valid_other_dict(value: dict) -> dict:
         value["height_m"] = None
     else:
         value["height_m"] = io_return_if_positive(
-            io_convert_to_float(value["weight_kg"])
+            io_convert_to_float(value["height_m"])
+            )
+    if not value["generation"]:
+        raise NotANumberError('Given value in generation key is not a number')
+    else:
+        value["generation"] = io_return_if_positive(
+            io_convert_to_float(value["generation"])
             )
     return value
 
