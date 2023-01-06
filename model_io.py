@@ -64,7 +64,7 @@ def io_convert_to_float(value: (float | int | str)) -> float:
 
 
 def io_convert_string_to_list(value: str) -> list:
-    """ Converts given string to list, even if it's empty.
+    """ Converts given string to list, even if it's empty.\n
     Throws exception if given string cannot be interpreted as list
 
     Args:
@@ -85,7 +85,8 @@ def io_convert_string_to_list(value: str) -> list:
 
 
 def io_return_if_positive(value: (int | float)) -> (int | float):
-    """ Returns value if > 0. Throws exception otherwise.
+    """ Returns value if it's greater than 0.\n
+    Throws exception otherwise.
 
     Args:
         value (int | float): Numeric value.
@@ -105,7 +106,8 @@ def io_return_if_positive(value: (int | float)) -> (int | float):
 
 
 def io_return_if_not_negative(value: (int | float)) -> (int | float):
-    """ Returns value if >= 0. Throws exception otherwise.
+    """ Returns value if it's greater or equal 0.\n
+    Throws exception otherwise.
 
     Args:
         value (int | float): Numeric value.
@@ -125,7 +127,7 @@ def io_return_if_not_negative(value: (int | float)) -> (int | float):
 
 
 def io_return_if_valid_string(value: str) -> str:
-    """ Returns value if string is valid (example: not empty).
+    """ Returns value if string is valid (example: not empty).\n
     Throws exception otherwise.
 
     Args:
@@ -146,7 +148,7 @@ def io_return_if_valid_string(value: str) -> str:
 
 
 def io_return_if_valid_abilities_as_list(value: str) -> list:
-    """ Checks if given pokemon's abilities lit saved as string is valid.
+    """ Checks if given pokemon's abilities lit saved as string is valid.\n
     Throws exception if string is corrupted, returns value as list otherwise.
 
     Args:
@@ -169,7 +171,7 @@ def io_return_if_valid_abilities_as_list(value: str) -> list:
 
 
 def check_if_valid_key(key: str, keys_list: list) -> None:
-    """ Checks if given key value exist in keys list.
+    """ Checks if given key value exist in keys list.\n
     Throws exception if it doesn't. Returns nothing
 
     Args:
@@ -187,7 +189,7 @@ def check_if_valid_key(key: str, keys_list: list) -> None:
 
 def io_return_valid_stats_dict(value: dict) -> dict:
     """ Checks if given stats dictionary is not corrupted, converts values
-    to proper data type and returns it.
+    to proper data type and returns it.\n
     Throws exception if given dict is malformed.
 
     Args:
@@ -249,7 +251,7 @@ def io_return_valid_stats_dict(value: dict) -> dict:
 
 def io_return_valid_special_strength_dict(value: dict) -> dict:
     """ Checks if given special_strength dictionary is not corrupted,
-    converts values to proper data type and returns it.
+    converts values to proper data type and returns it.\n
     Throws exception if given dict is malformed.
 
     Args:
@@ -308,7 +310,7 @@ def io_return_valid_special_strength_dict(value: dict) -> dict:
 
 def io_return_valid_other_dict(value: dict) -> dict:
     """ Checks if given other dictionary is not corrupted,
-    converts values to proper data type and returns it.
+    converts values to proper data type and returns it.\n
     Throws exception if given dict is malformed.
     height_m and weight_kg values can mapped to None if string is empty
 
@@ -368,7 +370,7 @@ def io_return_valid_other_dict(value: dict) -> dict:
 
 def read_from_json(file_hantle: io.TextIOWrapper) -> list:
     """ Reads every item in json file, check if it's not corrupted
-    and returns list of every base pokemon if no corrupted data was found.
+    and returns list of every base pokemon if no corrupted data was found.\n
     Throws exception otherwise.
 
     Args:

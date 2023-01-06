@@ -139,7 +139,7 @@ class BasePokemon:
                 return_instance='positive'
             ) -> (float | None):
         """ Returns none if value is None.
-        Checks and returns float after checking given return_instance
+        Checks and returns float after checking given return_instance.\n
         Throws exception if given value is not a number or None, or if
         given float does not match return_instance (ex. 0.0 is not positive)
 
@@ -173,8 +173,11 @@ class BasePokemon:
             value = self._convert_to_float(value)
         return value
 
-    def _convert_to_int(self, value) -> int:
-        """ Converts given string (or int) to int
+    def _convert_to_int(self, value: (int | str)) -> int:
+        """ Converts given string (or int) to int. Float values cannot be
+        mapped to int in this object's instance.\n
+        Throws exception if given value cannot be converted to int or is float.
+
 
         Args:
             value (int | str -> int): value convertable to int.
@@ -199,8 +202,9 @@ class BasePokemon:
             )
         return int(value)
 
-    def _convert_to_float(self, value) -> float:
-        """ Converts given string, int or float to float
+    def _convert_to_float(self, value: (float | int | str)) -> float:
+        """ Converts given string, int or float to float.\n
+        Throws exception if given value is not a number
 
         Args:
             value (float | int -> float | str -> float): value
@@ -219,8 +223,9 @@ class BasePokemon:
                 'Given value cannot be converted to float.'
                 )
 
-    def _return_if_positive(self, value):
-        """ Returns value if > 0. Throws exception otherwise.
+    def _return_if_positive(self, value: (int | float)) -> (int | float):
+        """ Returns value if value is greater than 0.\n
+        Throws exception otherwise.
 
         Args:
             value (int | float): Numeric value.
@@ -238,8 +243,8 @@ class BasePokemon:
             raise ValueError('Given value must be positive.')
         return value
 
-    def _return_if_not_negative(self, value):
-        """ Returns value if it's greater or equal 0.
+    def _return_if_not_negative(self, value: (int | float)) -> (int | float):
+        """ Returns value if it's greater or equal 0.\n
         Throws exception otherwise.
 
         Args:
@@ -351,8 +356,9 @@ class BasePokemon:
         """
         return self._special_strength
 
-    def get_special_strength_value(self, pokemon_type) -> float:
+    def get_special_strength_value(self, pokemon_type: str) -> float:
         """ Gets specific pokemon's special stregth using other pokemon's type.
+
         Returns it if type exist, otherwise throws exception.
 
         Args:
@@ -384,8 +390,9 @@ class BasePokemon:
         """
         return self._other
 
-    def get_other_value(self, other_dict_key) -> (int | float | None):
+    def get_other_value(self, other_dict_key: str) -> (int | float | None):
         """ Gets specific pokemon's value from other dictionary with given arg.
+
         Returns it if type exist, otherwise throws exception.
 
         Args:
@@ -587,8 +594,8 @@ class GamePokemon(BasePokemon):
 # Setters
 
     def set_max_hp(self, value: int) -> None:
-        """ Sets value of pokemon's max_hp if it's greater than zero.
-        Throws exception otherwise.
+        """ Sets value of pokemon's max_hp if it's greater than zero.\n
+        Throws exception otherwise.\n
         If current hp value in greater than new max_hp, function also
         sets hp value to max_hp.
 
@@ -607,7 +614,7 @@ class GamePokemon(BasePokemon):
             self.set_hp(value)
 
     def set_hp(self, value: int) -> None:
-        """Sets value of pokemon's hp if it's greater or equal zero.
+        """Sets value of pokemon's hp if it's greater or equal zero.\n
         Throws exception otherwise.
 
         Args:
@@ -627,7 +634,7 @@ class GamePokemon(BasePokemon):
             self._set_is_alive(True)
 
     def set_attack(self, value: int) -> None:
-        """ Sets value of pokemon's attack if it's greater or equal zero.
+        """ Sets value of pokemon's attack if it's greater or equal zero.\n
         Throws exception otherwise.
 
         Args:
@@ -643,7 +650,7 @@ class GamePokemon(BasePokemon):
         self._attack = value
 
     def set_defense(self, value: int) -> None:
-        """ Sets value of pokemon's defense if it's greater than zero.
+        """ Sets value of pokemon's defense if it's greater than zero.\n
         Throws exception otherwise.
 
         Args:
