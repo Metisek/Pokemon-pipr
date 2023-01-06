@@ -54,7 +54,9 @@ class PokemonDatabase:
         """
         return self._base_file_path
 
-    def _set_pokemon_base_list(self, pokemon_base_list: list[BasePokemon]) -> None:
+    def _set_pokemon_base_list(self,
+                               pokemon_base_list: list[BasePokemon]
+                               ) -> None:
         """Sets private value of pokemon's database as new database.\n
         Function won't throw exceptio due to parent's function check.
 
@@ -204,7 +206,9 @@ class PokemonDatabase:
                 "Pokemon with given pokedex number does not exist"
                 )
 
-    def search_database(self, query: (str | int)) -> (list[BasePokemon] | None):
+    def search_database(
+                self, query: (str | int)
+                ) -> (list[BasePokemon] | None):
         """Searches for given query in list of pokemons. If it's a number,
         cheks for pokedex number, otherwise checks for pokemon's name.\n
         Returns list of BasePokemon objects matching criteria or None if

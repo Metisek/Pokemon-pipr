@@ -1,5 +1,6 @@
 import copy
 from random import randint
+from math import ceil
 
 
 class InvalidDataLineLeghthError(ValueError):
@@ -435,7 +436,12 @@ class GamePokemon(BasePokemon):
         self._attack = self.get_base_attack()
         self._defense = self.get_base_defense()
         self._speed = self.get_base_speed()
+
         self._is_alive = True
+        self._stab = None
+        self._in_arena = False
+        self._defense_iter = 0
+
         if randomize:
             if not isinstance(
                         self.get_other_value('percentage_male'), type(None)
@@ -575,6 +581,32 @@ class GamePokemon(BasePokemon):
         """
         return self._is_alive
 
+    def get_in_arena(self) -> bool:
+        """ Checks if pokemon is currently playing and returns proper value.
+
+        Returns:
+           bool : Is pokemon plaing in current arena.
+        """
+        return self._in_arena
+
+    def _get_stab(self) -> None | str:
+        """ Gets private value of pokemon's previous STAB and returns it.\n
+        STAB is the same-type attack bonus.
+
+        Returns:
+           None | str: name of previously used attack or None if it
+           does not exist.
+        """
+        return self._stab
+
+    def _get_defense_iter(self) -> int:
+        """ Checks and returns how many times does current pokemon used defend.
+
+        Returns:
+           int : Defense increase function iteration.
+        """
+        return self._defense_iter
+
 # Private setters
 
     def _set_is_alive(self, value: bool) -> None:
@@ -590,6 +622,28 @@ class GamePokemon(BasePokemon):
         if not isinstance(value, bool):
             raise MalformedPokemonDataError('Given value is not boolean')
         self._is_alive = value
+
+    def _set_defense_iter(self, value: int) -> None:
+        """ Sets if pokemon is alive (it's HP must be greater than 0).
+        Cannot be called by itself, only via other function, like set_hp.
+
+        Args:
+            value (bool): Is pokemon alive
+
+        Raises:
+            BadConversionError: Float cannot be mapped (rounded) to int in
+            this object.
+            NotANumberError: Value cannot be converted to int
+        """
+        try:
+            value = self._return_if_positive(self._convert_to_int(value))
+        except BadConversionError:
+            raise BadConversionError(
+                'Float cannot be mapped (rounded) to int in this object'
+                )
+        except NotANumberError:
+            raise NotANumberError('Value cannot be converted to int')
+        self._defense_iter = value
 
 # Setters
 
@@ -664,3 +718,73 @@ class GamePokemon(BasePokemon):
         """
         value = self._return_if_positive(self._convert_to_int(value))
         self._defense = value
+
+    # Damage system
+
+    def _get_stab_value(self, attack_type: str) -> (int | float):
+        if isinstance(self._get_stab(), type(None)):
+            stab = 1
+        elif self._get_stab() == attack_type:
+            stab = 1.5
+        else:
+            stab = 1
+        return stab
+
+    def _base_attack_algorithm(self, enemy_pokemon, stab, critical) -> float:
+        A = self.get_attack()
+        D = enemy_pokemon.get_defense()
+        random_value = randint(217, 255) / 255
+        damage_base = (
+            (((3 * critical) + 1) * 10 * (A / D)) / 40 + 2
+            ) * stab * random_value
+        return damage_base
+
+    def _special_attack_algotithm(
+                self, enemy_pokemon, stab, critical
+            ) -> float:
+        base_damage = self._base_attack_algorithm(
+            enemy_pokemon, stab, critical
+            )
+        enemy_types = enemy_pokemon.get_types()
+        type_1 = enemy_types[0]
+        type_2 = 0 if isinstance(
+            enemy_types[1], type(None)
+            ) else enemy_types[1]
+        special_damage_1 = self.get_special_strength_value(type_1)
+        special_damage_2 = self.get_special_strength_value(type_2)
+        special_damage = base_damage * special_damage_1 * special_damage_2
+        return special_damage
+
+    def attack_basic(self, enemy_pokemon):
+        attack_type = "basic"
+        stab = self._get_stab_value(attack_type)
+        critical = 2 if randint(0, 100) < 10 else 1
+        damage = ceil(self._base_attack_algorithm(
+            enemy_pokemon, stab, critical
+            ))
+        enemy_pokemon.take_damage(damage)
+
+    def attack_special(self, enemy_pokemon):
+        attack_type = "special"
+        stab = self._get_stab_value(attack_type)
+        critical = 2 if randint(0, 100) < 10 else 1
+        damage = ceil(self._base_attack_algorithm(
+            enemy_pokemon, stab, critical
+            ))
+        enemy_pokemon.take_damage(damage)
+
+    def _take_damage(self, value: int) -> None:
+        new_hp = self.get_hp - value
+        if new_hp < 0:
+            new_hp = 0
+        self.set_hp(new_hp)
+
+    def increase_defense(self) -> None:
+        defense_iter = self._get_defense_iter()
+        current_defense = self.get_defense()
+        new_defense = (
+            current_defense + current_defense * 0.1 * pow(0.9, defense_iter)
+            )
+        new_defense = ceil(new_defense)
+        self.set_defense(new_defense)
+        self._set_defense_iter(self._get_defense_iter()+1)

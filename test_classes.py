@@ -7,6 +7,15 @@ from classes import (
                      #  MalformedPokemonDataError,
                     )
 import copy
+from database import PokemonDatabase
+from math import ceil
+
+
+def load_correct_database():
+    path = 'pokemon.json'
+    database = PokemonDatabase(path)
+    return database
+
 
 # Global values for testing purposes:
 global pokedex_number
@@ -347,3 +356,118 @@ def test_game_pokemon_empty_other_dict_vals_except_generation():
     assert game_pokemon.get_gender() == 'Unknown'
     assert game_pokemon.get_height() is None
     assert game_pokemon.get_weight() is None
+
+
+def test_game_pokemon_base_attack_algorithm_stab_1(monkeypatch):
+    database = load_correct_database()
+    pokemon_list = database.get_pokemon_database_list()
+    player_pokemon = GamePokemon(pokemon_list[0])
+    enemy_pokemon = GamePokemon(pokemon_list[1])
+    assert player_pokemon.get_attack() == 49
+    assert enemy_pokemon.get_defense() == 63
+
+    def always_255(x, y):
+        return 255
+
+    monkeypatch.setattr("classes.randint", always_255)
+    attack_val = ceil(
+        player_pokemon._base_attack_algorithm(enemy_pokemon, 1, 1)
+    )
+    assert attack_val == 3
+
+
+def test_game_pokemon_base_attack_algorithm_stab_1_5(monkeypatch):
+    database = load_correct_database()
+    pokemon_list = database.get_pokemon_database_list()
+    player_pokemon = GamePokemon(pokemon_list[0])
+    enemy_pokemon = GamePokemon(pokemon_list[1])
+    assert player_pokemon.get_attack() == 49
+    assert enemy_pokemon.get_defense() == 63
+
+    def always_255(x, y):
+        return 255
+
+    monkeypatch.setattr("classes.randint", always_255)
+    attack_val = ceil(
+        player_pokemon._base_attack_algorithm(enemy_pokemon, 1.5, 1)
+    )
+    assert attack_val == 5
+
+
+def test_game_pokemon_special_attack_algorithm_stab_1(monkeypatch):
+    database = load_correct_database()
+    pokemon_list = database.get_pokemon_database_list()
+    player_pokemon = GamePokemon(pokemon_list[0])
+    enemy_pokemon = GamePokemon(pokemon_list[1])
+    assert player_pokemon.get_attack() == 49
+    assert enemy_pokemon.get_defense() == 63
+    enemy_types = enemy_pokemon.get_types()
+    assert player_pokemon.get_special_strength_value(
+        enemy_types[0]) == 0.25
+    assert player_pokemon.get_special_strength_value(
+        enemy_types[1]) == 1
+
+    def always_255(x, y):
+        return 255
+
+    monkeypatch.setattr("classes.randint", always_255)
+    attack_val = ceil(
+        player_pokemon._special_attack_algotithm(enemy_pokemon, 1, 1)
+    )
+    assert attack_val == 1
+
+
+def test_game_pokemon_special_attack_algorithm_stab_1_5(monkeypatch):
+    database = load_correct_database()
+    pokemon_list = database.get_pokemon_database_list()
+    player_pokemon = GamePokemon(pokemon_list[0])
+    enemy_pokemon = GamePokemon(pokemon_list[1])
+    assert player_pokemon.get_attack() == 49
+    assert enemy_pokemon.get_defense() == 63
+    enemy_types = enemy_pokemon.get_types()
+    assert player_pokemon.get_special_strength_value(
+        enemy_types[0]) == 0.25
+    assert player_pokemon.get_special_strength_value(
+        enemy_types[1]) == 1
+
+    def always_255(x, y):
+        return 255
+
+    monkeypatch.setattr("classes.randint", always_255)
+    attack_val = ceil(
+        player_pokemon._special_attack_algotithm(enemy_pokemon, 1.5, 1)
+    )
+    assert attack_val == 2
+
+
+def test_game_pokemon_base_attack_algorithm_stab_1_5_crit(monkeypatch):
+    database = load_correct_database()
+    pokemon_list = database.get_pokemon_database_list()
+    player_pokemon = GamePokemon(pokemon_list[0])
+    enemy_pokemon = GamePokemon(pokemon_list[1])
+    assert player_pokemon.get_attack() == 49
+    assert enemy_pokemon.get_defense() == 63
+
+    def always_255(x, y):
+        return 255
+
+    monkeypatch.setattr("classes.randint", always_255)
+    attack_val = ceil(
+        player_pokemon._base_attack_algorithm(enemy_pokemon, 1.5, 2)
+    )
+    assert attack_val == 6
+
+
+def test_game_pokemon_increase_defense():
+    database = load_correct_database()
+    pokemon_list = database.get_pokemon_database_list()
+    player_pokemon = GamePokemon(pokemon_list[0])
+    assert player_pokemon.get_defense() == 49
+    player_pokemon.increase_defense()
+    assert player_pokemon.get_defense() == 54
+    player_pokemon.increase_defense()
+    assert player_pokemon.get_defense() == 59
+    player_pokemon.increase_defense()
+    assert player_pokemon.get_defense() == 64
+    player_pokemon.increase_defense()
+    assert player_pokemon.get_defense() == 69
