@@ -38,7 +38,7 @@ class PokemonDatabase:
         self._base_file_path = file_path
         self._load_from_json()
 
-    def get_pokemon_database_list(self) -> list:
+    def get_pokemon_database_list(self) -> list[BasePokemon]:
         """ Gets private value of pokemon's database and returns it.
 
         Returns:
@@ -54,7 +54,7 @@ class PokemonDatabase:
         """
         return self._base_file_path
 
-    def _set_pokemon_base_list(self, pokemon_base_list: list) -> None:
+    def _set_pokemon_base_list(self, pokemon_base_list: list[BasePokemon]) -> None:
         """Sets private value of pokemon's database as new database.\n
         Function won't throw exceptio due to parent's function check.
 
@@ -87,7 +87,7 @@ class PokemonDatabase:
         except IsADirectoryError:
             raise IsADirectoryError("Provided path is a directory.")
 
-    def _search_name(self, substring: str) -> list:
+    def _search_name(self, substring: str) -> list[BasePokemon]:
         """Searches for every pokemon with matching substring.
         Given search is not case sensitive.\n
         Returns empty list if substring is empty
@@ -137,7 +137,7 @@ class PokemonDatabase:
                 "Pokemon with given name does not exist"
                 )
 
-    def _search_pokedex_number(self, number: int) -> list:
+    def _search_pokedex_number(self, number: int) -> list[BasePokemon]:
         """Searches for every pokemon with given equal or part of number and
         returns list of every matching pokemon.\n
         Pokemon with equal value always appeares first in givel list.\n
@@ -204,7 +204,7 @@ class PokemonDatabase:
                 "Pokemon with given pokedex number does not exist"
                 )
 
-    def search_database(self, query: (str | int)) -> (list | None):
+    def search_database(self, query: (str | int)) -> (list[BasePokemon] | None):
         """Searches for given query in list of pokemons. If it's a number,
         cheks for pokedex number, otherwise checks for pokemon's name.\n
         Returns list of BasePokemon objects matching criteria or None if
