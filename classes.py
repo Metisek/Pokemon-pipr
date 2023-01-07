@@ -23,6 +23,10 @@ class BadConversionError(ValueError):
     pass
 
 
+class InvalidDataTypeError(TypeError):
+    pass
+
+
 class RedundantKeyError(KeyError):
     pass
 

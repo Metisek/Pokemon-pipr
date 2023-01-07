@@ -7,6 +7,7 @@ from classes import (
     BasePokemon,
     NotANumberError
 )
+from pygame_objects import Button
 
 
 class PokemonDatabase:
@@ -239,3 +240,108 @@ class PokemonDatabase:
         if not search_result:
             return None
         return search_result
+
+
+class PyGameObjectsDatabase:
+    def __init__(self) -> None:
+        self._objects_base_dict = {
+            'main_menu': {
+                'main_menu': {
+                    'play_button': Button(
+                        'PLAY', (200, 60), (300, 250)),
+                    'credits_button': Button(
+                        'Credits', (200, 40), (300, 350)),
+                    'quit_button': Button(
+                        'Quit', (200, 40), (300, 430))
+                    },
+                'credits_menu': {
+                    'back_button': Button(
+                        'Back', (100, 40), (70, 70))
+                    },
+                'players_select': {
+                    '1_player_button': Button(
+                        '1 player', (200, 60), (300, 250)),
+                    '2_player_button': Button(
+                        '2 players', (200, 60), (300, 370)),
+                    'back_button': Button(
+                        'Back', (100, 40), (50, 50))
+                    },
+                },
+            'game_init': {
+                'player_one_init': {
+                    'add_pokemon_button': Button(
+                        'ADD', (95, 40), (50, 480), 'inactive'
+                        ),
+                    'remove_pokemon_button': Button(
+                        'REMOVE', (95, 40), (155, 480), 'inactive'
+                        ),
+                    'continue_button': Button(
+                        'CONTINUE', (200, 40), (550, 480), 'inactive'
+                        ),
+                    'add_pokeballs_button':  Button(
+                        '+', (40, 40), (550, 540)
+                        ),
+                    'remove_pokeballs_button':  Button(
+                        '-', (40, 40), (210, 540), 'inactive'
+                        ),
+                    'back_button': Button(
+                        'Back', (100, 40), (50, 50)
+                    )
+                },
+                'player_two_init': {
+                    'add_pokemon': Button(
+                        'ADD', (100, 40), (50, 480), 'inactive'
+                        ),
+                    'remove_pokemon': Button(
+                        'REMOVE', (100, 40), (170, 480), 'inactive'
+                        ),
+                    'continue': Button(
+                        'CONTINUE', (150, 40), (400, 480), 'inactive'
+                        ),
+                    'add_pokeballs':  Button(
+                        '+', (40, 40), (450, 540)
+                        ),
+                    'remove_pokeballs':  Button(
+                        '-', (40, 40), (150, 540)
+                        ),
+                },
+                'start_game': {
+                    'start': Button(
+                        'START', (200, 60), (50, 480), 'big'
+                        ),
+                }
+            },
+            'game': {
+
+            }
+        }
+
+    def get_full_database(self):
+        return self._objects_base_dict
+
+    def get_active_objects(self, game_state, menu_state):
+        database_game_part = self.get_full_database().get(game_state)
+        database_menu_part = database_game_part.get(menu_state)
+        return database_menu_part
+
+
+class TextDatabase:
+    def __init__(self) -> None:
+        self._text_dict = {
+            'credits': """Autor: Mateusz Bojarski
+Projekt zaliczeniowy PIPR 2022Z
+
+
+
+2022 - 2023
+:)
+Nata jest spoko""",
+
+            }
+
+    def get_text(self, key):
+        return self.get_splitted_text(self._text_dict.get(key))
+
+    def get_splitted_text(self, text: str):
+        text = text.replace('\t', '')
+        return text.split('\n')
