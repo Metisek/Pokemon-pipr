@@ -231,7 +231,7 @@ class PokemonDatabase:
                 'Given query data type cannot be used for searching'
                 )
         if not query:
-            return None
+            return self.get_pokemon_database_list()
         try:
             query = io_convert_to_int(query)
             search_result = self._search_pokedex_number(query)

@@ -1,4 +1,5 @@
-from pygame_objects import AbstractWidget, Button, PokemonFrame
+from pygame_objects import AbstractWidget, Button
+import pygame
 
 from classes import (
     InvalidDataTypeError,
@@ -16,6 +17,7 @@ pos = (100, 100)
 
 # Odpuszczam testy sprawdzajace czy dane wartosci są floatami,
 # Odpowiednie testy są w test_model_io.py
+
 
 def test_abstract_widget_init():
     abstract_widget = AbstractWidget(size, pos)
@@ -54,4 +56,10 @@ def test_button_init():
 
 def test_button_draw_button_values():
     button = Button("test", size, pos)
-    button.get_draw_values()
+    values = button.get_draw_values()
+    assert values[0] == (13, 15, 25)
+    assert isinstance(values[1], pygame.Rect)
+    assert values[2] == (200, 208, 218)
+    assert isinstance(values[3], pygame.Rect)
+    assert isinstance(values[4], pygame.Surface)
+    assert isinstance(values[5], pygame.Rect)
