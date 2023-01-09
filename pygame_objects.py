@@ -76,7 +76,24 @@ class AbstractWidget:
     # Checking functions:
 
     def _return_if_tuple_or_list_with_size(
-            self, object: (list | tuple), size: int):
+            self, object: (list | tuple), size: int) -> (list | tuple):
+        """_summary_
+
+        Args:
+            object (list  |  tuple): list or tuple with elements
+            size (int): non-negative size of given object to check
+
+        Raises:
+            BadConversionError: Given float value cannot be mapped to int
+            NotANumberError: Given size variable is not a number
+            ValueError: Size of given object must not negative
+            InvalidDataTypeError: Given object is not a list or tuple
+            InvalidDataLineLeghthError: Given object size does not match size
+            value
+
+        Returns:
+            list | tuple: object arg
+        """
         try:
             size = io_return_if_not_negative(io_convert_to_int(size))
         except BadConversionError:
@@ -86,7 +103,7 @@ class AbstractWidget:
         except NotANumberError:
             raise NotANumberError('Given size variable is not a number')
         except ValueError:
-            raise ValueError('Size of given object must be positive')
+            raise ValueError('Size of given object must be not negative')
         if not isinstance(object, (tuple, list)):
             raise InvalidDataTypeError('Given values are not iterable')
         if len(object) != size:
@@ -144,18 +161,38 @@ class AbstractWidget:
         self._pos_x = x_pos
         self._pos_y = y_pos
 
-    def raise_event(self):
+    def raise_event(self) -> bool:
+        """Returns if given object raised event, without specifying it's type
+
+        Returns:
+            _type_: _description_
+        """
         return self._raise_event
 
 
-class Button(AbstractWidget):
-    def __init__(self, text: str, size: tuple[float, float],
-                 pos: tuple[float, float], button_type='normal') -> None:
+class AbstractFrame(AbstractWidget):
+    """Abstract frame object containing drawable rectangle with frame
+    Also contains values with diffrent object modes
+    """
+    def __init__(self, size: tuple[float, float],
+                 pos: tuple[float, float], object_style='normal') -> None:
+        """_summary_
 
+        Args:
+            size (tuple[float, float]): w x h constant size of drawable frame
+            pos (tuple[float, float]):  Left x Top position coordinates
+            object_style (str, optional): key for object style. Defaults to 'normal'.
+
+        Raises:
+            InvalidDataTypeError: Given size or pos is not a tuple or list
+            InvalidDataLineLeghthError: Given list or tuple size is not equal 2
+            BadConversionError: Given float value cannot be mapped to int
+            NotANumberError: Given value is not a number
+            ValueError: Given value is not greater (or equal) 0
+            RedundantKeyError: Given object_style key does not exist
+        """
         super().__init__(size, pos)
 
-        # Core attributes
-        self._is_pressed = False
         self._colors_dict = {
             'normal': {
                 'frame_inactive': COLORS.get('LIGHT_GRAY'),
@@ -181,21 +218,16 @@ class Button(AbstractWidget):
             'inactive': FONTS.get('GUI_FONT'),
             'big': FONTS.get('MEDIUM_FONT')
         }
-
         # Init checks
-        if not isinstance(text, str):
-            raise InvalidDataTypeError('Given text is not a string')
         try:
-            check_if_valid_key(button_type, self._colors_dict.keys())
+            check_if_valid_key(object_style, self._colors_dict.keys())
+            check_if_valid_key(object_style, self._fonts_dict.keys())
         except RedundantKeyError:
             raise RedundantKeyError('Given button type does not exist')
 
-        # Button drawing attributes
+        # Drawing attributes
 
-        self._button_type = button_type
-        self._original_y_pos = pos[1]
-        self._elevation = 2
-        self._dynamic_elevation = 2
+        self._object_style = object_style
 
         # Draw: Frame rectangle
         self._set_frame_pos()
@@ -203,27 +235,10 @@ class Button(AbstractWidget):
         # Draw: Background rectangle
         self._set_bg_pos()
 
-        # Text:
-        self._text = text
-        self._text_surf = self.get_font().render(
-            text, True, self.get_color('frame_inactive')
-        )
-        self._text_rect = self._text_surf.get_rect(
-            center=self._frame_rect.center
-            )
-
     # Getters
 
-    def get_button_type(self) -> str:
-        """Checks type of given button and returns it as string.
-
-        Returns:
-            str: Button type key as string.
-        """
-        return self._button_type
-
     def get_color(self, color_key: str) -> tuple[int, int, int]:
-        """Gets RGB value from given button type and string key.
+        """Gets RGB value from given object style and string key.
         Throws exception if given key is not a string or is invalid.
 
         Args:
@@ -238,13 +253,21 @@ class Button(AbstractWidget):
         """
         if not isinstance(color_key, str):
             raise InvalidDataTypeError('Given value is not a string')
-        button_type = self.get_button_type()
-        keys = self._colors_dict.get(button_type).keys()
+        style = self.get_object_style()
+        keys = self._colors_dict.get(style).keys()
         try:
             check_if_valid_key(color_key, keys)
         except RedundantKeyError:
             raise RedundantKeyError('Given key does not exist')
-        return self._colors_dict.get(button_type).get(color_key)
+        return self._colors_dict.get(style).get(color_key)
+
+    def get_object_style(self) -> str:
+        """Checks style of given object and returns it as string.
+
+        Returns:
+            str: Button type key as string.
+        """
+        return self._object_style
 
     def get_font(self) -> pygame.font.Font:
         """Gets font from given button type and returns font object
@@ -252,7 +275,7 @@ class Button(AbstractWidget):
         Returns:
             pygame.font.SysFont: Pygame font object.
         """
-        return self._fonts_dict.get(self.get_button_type())
+        return self._fonts_dict.get(self.get_object_style())
 
     def get_frame(self) -> tuple[pygame.Rect, tuple[int, int, int]]:
         """Gets both frame pygame.Rect object and colors tuple and returns it.
@@ -269,6 +292,48 @@ class Button(AbstractWidget):
             tuple[pygame.Rect, tuple[int, int, int]]: tuple with given values.
         """
         return (self._bg_rect, self._bg_color)
+
+    # Setters
+
+    def _set_frame_pos(self) -> None:
+        """Sets current frame to saved position
+        """
+        self._frame_rect = pygame.Rect(self.get_pos(), self.get_size())
+
+    def _set_bg_pos(self) -> None:
+        """Sets current background frame to saved position
+        """
+        self._bg_rect = pygame.Rect(self.get_pos(), self.get_size())
+
+
+class Button(AbstractFrame):
+    def __init__(self, text: str, size: tuple[float, float],
+                 pos: tuple[float, float], object_style='normal') -> None:
+
+        super().__init__(size, pos, object_style)
+
+        # Init checks
+        if not isinstance(text, str):
+            raise InvalidDataTypeError('Given text is not a string')
+
+        # Core attributes
+        self._is_pressed = False
+
+        # Button drawing attributes
+        self._original_y_pos = pos[1]
+        self._elevation = 2
+        self._dynamic_elevation = 2
+
+        # Text:
+        self._text = text
+        self._text_surf = self.get_font().render(
+            text, True, self.get_color('frame_inactive')
+        )
+        self._text_rect = self._text_surf.get_rect(
+            center=self._frame_rect.center
+            )
+
+    # Getters
 
     def get_button_is_pressed(self) -> bool:
         """ Checks if given button is currently pressed.
@@ -319,12 +384,6 @@ class Button(AbstractWidget):
         self._set_text_pos()
         self._original_y_pos = pos[1]
 
-    def _set_frame_pos(self) -> None:
-        self._frame_rect = pygame.Rect(self.get_pos(), self.get_size())
-
-    def _set_bg_pos(self) -> None:
-        self._bg_rect = pygame.Rect(self.get_pos(), self.get_size())
-
     def _set_text_pos(self) -> None:
         self._text_rect = self._text_surf.get_rect(
             center=self._frame_rect.center
@@ -362,8 +421,9 @@ class Button(AbstractWidget):
                 self._text_surf, self._text_rect)
 
     def check_click(self):
+        self._dynamic_elevation = 2
         self._raise_event = False
-        if self.get_button_type() == 'inactive':
+        if self.get_object_style() == 'inactive':
             self.set_inactive_button_colors()
         mouse_pos = pygame.mouse.get_pos()
         if self._frame_rect.collidepoint(mouse_pos):
@@ -379,7 +439,9 @@ class Button(AbstractWidget):
                     self._is_pressed = False
                     self.set_text(self.get_button_text(), True)
         else:
+            self._is_pressed = False
             self.set_inactive_button_colors()
+            self._dynamic_elevation = self._elevation
 
 
 class PokemonFrame(AbstractWidget):

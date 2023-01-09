@@ -1,32 +1,62 @@
 import pygame
-from pygame_objects import Button, COLORS, FONTS
+from pygame_objects import Button
+from attributes import (
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    FPS,
+    FONTS,
+    COLORS
+)
+from classes import (
+    MalformedPokemonDataError,
+    PokemonDataDoesNotExistError,
+    DataDoesNotExistError,
+    BadConversionError,
+    InvalidDataTypeError,
+    RedundantKeyError
+)
+
+from tk_objects import TkPokemonSelectWindow
 from database import PyGameObjectsDatabase, TextDatabase
+from classes import BasePokemon, GamePokemon
+
 
 pygame.init()
 
-# Create game window
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-
-FPS = 30
-
 
 class Screen:
-    def __init__(self):
+    """PyGame screen window class with drawing functions embedded
+    """
+    def __init__(self) -> None:
+        """Initialises main screen with basic parameters set in attributes
+        """
         self._screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self._clock = pygame.time.Clock()
         pygame.display.set_caption("Pokemon - Mateusz Bojarski")
 
-    def get_clock(self):
+    def get_clock(self) -> pygame.time.Clock:
+        """Gets private value of screen's clock (FPS) and returns it
+
+        Returns:
+            pygame.time.Clock: Active clock object
+        """
         return self._clock
 
-    def _get_screen(self):
+    def _get_screen(self) -> pygame.display:
+        """Gets private value of screen display object and returns it
+
+        Returns:
+            pygame.display: Acrive display
+        """
         return self._screen
 
     def update_display(self):
+        """Updates current pygame display
+        """
         pygame.display.update()
 
     def draw_objects(self, objects_dict: dict[str]) -> None:
+
         objects = objects_dict.values()
         for object in objects:
             if isinstance(object, Button):
@@ -82,8 +112,41 @@ class PokemonGame:
         self._game_state = 'main_menu'
         self._menu_state = 'main_menu'
         self._player_count = None
+        self._player_one_pokemons = []
+        self._player_two_pokemons = []
         self._objects_database = PyGameObjectsDatabase()
-        pygame.display.set_caption("Pokemon - Mateusz Bojarski")
+
+    def add_pokemon_to_player(self, pokemon: BasePokemon, player):
+        if player == 1:
+            pokemons = self.get_player_one_pokemons()
+        elif player == 2:
+            pokemons = self.get_player_two_pokemons()
+        pokemons.append(pokemon)
+        self.set_player_pokemons(pokemons, player)
+
+    def get_player_one_pokemons(self):
+        return self._player_one_pokemons
+
+    def get_player_two_pokemons(self):
+        return self._player_two_pokemons
+
+    def set_player_pokemons(
+        self, pokemons: list[(BasePokemon | GamePokemon)], player
+            ):
+        if player == 1:
+            self._set_player_one_pokemons(pokemons)
+        elif player == 2:
+            self._set_player_two_pokemons(pokemons)
+
+    def _set_player_one_pokemons(
+            self, pokemons: list[(BasePokemon | GamePokemon)]
+            ):
+        self._player_one_pokemons = pokemons
+
+    def _set_player_two_pokemons(
+            self, pokemons: list[(BasePokemon | GamePokemon)]
+            ):
+        self._player_two_pokemons = pokemons
 
     def raised_event(self, object_key):
         active_objects = self.get_active_objects()
@@ -118,6 +181,7 @@ def main():
     run = True
     screen = Screen()
     game = PokemonGame()
+    tk_sel_window = TkPokemonSelectWindow()
     text_database = TextDatabase()
     while run:
         screen.get_clock().tick(FPS)
@@ -129,10 +193,8 @@ def main():
         if g_state == 'main_menu':
             if m_state == 'main_menu':
                 if game.raised_event('play_button'):
-                    print('MAMY TO!')
                     game.set_menu_state('players_select')
                 elif game.raised_event('credits_button'):
-                    print('CREDITS')
                     game.set_menu_state('credits_menu')
                 elif game.raised_event('quit_button'):
                     run = False
@@ -152,6 +214,15 @@ def main():
                     game.set_player_count(2)
                 elif game.raised_event('back_button'):
                     game.set_menu_state('main_menu')
+
+        elif g_state == 'game_init':
+            if m_state == 'player_one_init':
+                if game.raised_event('add_pokemon_button'):
+                    tk_sel_window.show_window()
+                    if tk_sel_window.get_choosen_pokemon():
+                        game.add_pokemon_to_player(
+                            tk_sel_window.get_choosen_pokemon(), 1
+                        )
 
         # Game draw static objects
 

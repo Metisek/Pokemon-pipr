@@ -3,6 +3,11 @@ import os
 
 pygame.init()
 
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+FPS = 30
+
 FRAME_PATH = os.path.join('assets', 'pokemon_frame.png')
 FRAME_IMAGE = pygame.image.load(FRAME_PATH)
 DATABASE_PATH = 'pokemon.json'
