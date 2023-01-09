@@ -134,7 +134,7 @@ class AbstractWidget:
     # Setters
 
     def _set_pos(self, new_pos: tuple[float, float]) -> None:
-        """_summary_
+        """Sets Left x Top coordinates of AbstractWidget object
 
         Args:
             new_pos (tuple[float, float]): New Left x Top coordinates
@@ -181,7 +181,8 @@ class AbstractFrame(AbstractWidget):
         Args:
             size (tuple[float, float]): w x h constant size of drawable frame
             pos (tuple[float, float]):  Left x Top position coordinates
-            object_style (str, optional): key for object style. Defaults to 'normal'.
+            object_style (str, optional): key for object style.
+            Defaults to 'normal'.
 
         Raises:
             InvalidDataTypeError: Given size or pos is not a tuple or list
@@ -305,6 +306,41 @@ class AbstractFrame(AbstractWidget):
         """
         self._bg_rect = pygame.Rect(self.get_pos(), self.get_size())
 
+    def _set_frame_color(self, color: tuple[int, int, int]) -> None:
+        """Sets current frame color to given RGB value
+
+        Args:
+            color (tuple[int, int, int]): (R, G, B) values
+        """
+        self._frame_color = (color)
+
+    def _set_bg_color(self, color: tuple[int, int, int]) -> None:
+        """Sets current frame background color to given RGB value
+
+        Args:
+            color (tuple[int, int, int]): (R, G, B) values
+        """
+        self._bg_color = color
+
+    # Other
+
+    def change_frame_pos(self, pos: tuple[float, float]) -> None:
+        """Sets Left x Top coordinates of frame object and automatically
+        moves rectangle do given coordinates
+
+        Args:
+            new_pos (tuple[float, float]): New Left x Top coordinates
+
+        Raises:
+            InvalidDataTypeError: Given value is not a tuple or list
+            InvalidDataLineLeghthError: Given list or tuple size is not equal 2
+            NotANumberError: Given value is not a number
+            ValueError: Given value is not greater (or equal) 0
+        """
+        self._set_pos(pos)
+        self._set_frame_pos()
+        self._set_bg_pos()
+
 
 class Button(AbstractFrame):
     def __init__(self, text: str, size: tuple[float, float],
@@ -329,9 +365,7 @@ class Button(AbstractFrame):
         self._text_surf = self.get_font().render(
             text, True, self.get_color('frame_inactive')
         )
-        self._text_rect = self._text_surf.get_rect(
-            center=self._frame_rect.center
-            )
+        self._text_rect = self._set_text_pos()
 
     # Getters
 
@@ -353,11 +387,23 @@ class Button(AbstractFrame):
 
     # Setters
 
-    def set_text(self, new_text: str, is_active=False) -> None:
-        if not isinstance(new_text, str) or not isinstance(is_active, bool):
-            raise InvalidDataTypeError('Given values are invalid')
+    def set_text(self, new_text: str) -> None:
+        """Sets given button's text and updates it
+
+        Args:
+            new_text (str): Replaced text
+
+        Raises:
+            InvalidDataTypeError: Given value cannot be converted to str
+        """
+        try:
+            str(new_text)
+        except TypeError:
+            raise InvalidDataTypeError(
+                'Given value cannot be converted to str'
+                )
         self.text = new_text
-        if is_active:
+        if self.get_button_is_pressed():
             color = self.get_color('frame_active')
         else:
             color = self.get_color('frame_inactive')
@@ -365,49 +411,56 @@ class Button(AbstractFrame):
         self._set_text_pos()
 
     def set_button_pos(self, pos: tuple[int, int]) -> None:
-        try:
-            pos = self._return_if_tuple_or_list_with_size(pos, 2)
-            new_x = io_return_if_not_negative(io_convert_to_float(pos[0]))
-            new_y = io_return_if_not_negative(io_convert_to_float(pos[1]))
-        except InvalidDataTypeError:
-            raise InvalidDataTypeError('Given values are not iterable')
-        except InvalidDataLineLeghthError:
-            raise InvalidDataLineLeghthError('Given tuple size is not equal 2')
-        except NotANumberError:
-            raise NotANumberError('Given value is not a number')
-        except ValueError:
-            raise ValueError('Given value is not greater or equal 0')
+        """Changes button position and automatically moves to it
 
-        self._set_pos((new_x, new_y))
-        self._set_frame_pos()
-        self._set_bg_pos()
+        Args:
+            pos (tuple[int, int]): Left x Top coordinates for object
+
+        Raises:
+            InvalidDataTypeError: Given values are not iterable
+            InvalidDataLineLeghthError: Given tuple size is not equal 2
+            NotANumberError: Given value is not a number
+            ValueError: Given value is not greater or equal 0
+        """
+        self.change_frame_pos(pos)
         self._set_text_pos()
         self._original_y_pos = pos[1]
 
     def _set_text_pos(self) -> None:
+        """Sets given text position using saved coordinates
+        """
         self._text_rect = self._text_surf.get_rect(
             center=self._frame_rect.center
             )
 
-    def _set_frame_color(self, color: tuple[int, int, int]) -> None:
-        self._frame_color = color
-
-    def _set_bg_color(self, color: tuple[int, int, int]) -> None:
-        self._bg_color = color
-
-    def set_active_button_colors(self):
+    def set_active_button_colors(self) -> None:
+        """Changes given object colors to its 'active' values
+        """
         self.set_text(self.get_button_text(), True)
         self._set_bg_color(self.get_color('bg_active'))
         self._set_frame_color(self.get_color('frame_active'))
 
-    def set_inactive_button_colors(self):
+    def set_inactive_button_colors(self) -> None:
+        """Changes given object colors to its 'inactive' values
+        """
         self.set_text(self.get_button_text(), False)
         self._set_bg_color(self.get_color('bg_inactive'))
         self._set_frame_color(self.get_color('frame_inactive'))
 
     # Main functions
 
-    def get_draw_values(self):
+    def get_draw_values(self) -> tuple[tuple[int, int, int], pygame.Rect,
+                                       tuple[int, int, int], pygame.Rect,
+                                       pygame.surface.Surface, pygame.Rect]:
+        """_summary_
+
+        Returns:
+            tuple(
+                tuple(int,int,int), pygame.Rect, (frame_bg)\n
+                tuple(int,int,int), pygame.Rect, (frame_frame)\n
+                pygame.surface.Surface, pygame.Rect (frame_text)
+                ): tuple with given objects handled within Screen class
+        """
         self._frame_rect.y = self._original_y_pos - self._dynamic_elevation
         self._text_rect.center = self._frame_rect.center
         self._bg_rect.midtop = self._frame_rect.midtop
@@ -421,6 +474,9 @@ class Button(AbstractFrame):
                 self._text_surf, self._text_rect)
 
     def check_click(self):
+        """Function checks if mouse is over button, if it's clicked, and if
+        it's raises event for game mainloop
+        """
         self._dynamic_elevation = 2
         self._raise_event = False
         if self.get_object_style() == 'inactive':
@@ -442,6 +498,10 @@ class Button(AbstractFrame):
             self._is_pressed = False
             self.set_inactive_button_colors()
             self._dynamic_elevation = self._elevation
+
+
+class PokemonList(AbstractFrame):
+    pass
 
 
 class PokemonFrame(AbstractWidget):
