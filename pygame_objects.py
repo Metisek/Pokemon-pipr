@@ -231,7 +231,9 @@ class AbstractFrame(AbstractWidget):
         self._fonts_dict = {
             'normal': FONTS.get('GUI_FONT'),
             'inactive': FONTS.get('GUI_FONT'),
-            'big': FONTS.get('MEDIUM_FONT')
+            'big': FONTS.get('MEDIUM_FONT'),
+            'no_frame': FONTS.get('GUI_FONT'),
+            'no_frame_inactive': FONTS.get('GUI_FONT'),
         }
         # Init checks
         try:
@@ -536,6 +538,7 @@ class PokemonListElem(AbstractFrame):
         self._pokemon = object
         self._text_objects = ()
         self._set_elem_texts()
+        self._current_index = 0
 
     # Getters
 
@@ -573,10 +576,13 @@ class PokemonListElem(AbstractFrame):
         """
         return self._text_objects
 
+    def get_event_type(self) -> str | None:
+        return self._event_type
+
     # Setters
 
-    def _set_frame_pos(self, pos: tuple[int, int]) -> None:
-        """Changes frme position and automatically moves to it
+    def set_elem_pos(self, pos: tuple[int, int]) -> None:
+        """Changes elem position and automatically moves to it
 
         Args:
             pos (tuple[int, int]): Left x Top coordinates for object
@@ -609,7 +615,7 @@ class PokemonListElem(AbstractFrame):
         """
         self._is_selected = False
 
-    def _set_elem_texts(self) -> None:
+    def _set_elem_texts(self, index=0) -> None:
         """Gets every single text with variables and sets tuple
         of Surface and Rect tuples: tuple[tuple[
             pygame.surface.Surface, pygame.rect.Rect]]
@@ -618,8 +624,8 @@ class PokemonListElem(AbstractFrame):
 
         pokemon = self.get_elem_object()
         main_color = self.get_color('font_color')
-        main_font = FONTS.get('SMALL_FONT')
-        medium_font = FONTS.get('MEDIUM_FONT')
+        main_font = FONTS.get('SMALLER_FONT')
+        medium_font = FONTS.get('SMALL_FONT')
         x, y = self.get_pos()
         text_list = []
 
@@ -629,8 +635,8 @@ class PokemonListElem(AbstractFrame):
         name_surf = medium_font.render(
             name_text, True, main_color)
         name_rect = name_surf.get_rect(
-            topleft=(x + 10, y + 10))
-        text_list.append(name_surf, name_rect)
+            topleft=(x + 10, y + 8 + 60 * index))
+        text_list.append((name_surf, name_rect))
 
         hp_text = 'HP: {}/{}'.format(
             str(pokemon.get_hp()), str(pokemon.get_max_hp())
@@ -638,10 +644,10 @@ class PokemonListElem(AbstractFrame):
         hp_surf = medium_font.render(
             hp_text, True, main_color)
         hp_rect = hp_surf.get_rect(
-            topleft=(x + 290, y + 10))
-        text_list.append(hp_surf, hp_rect)
+            topright=(x + 380, y + 8 + 60 * index))
+        text_list.append((hp_surf, hp_rect))
 
-        stats_text = 'ATT: {}  DEF: {}  SPD: {}'.format(
+        stats_text = 'ATT: {}   DEF: {}   SPD: {}'.format(
             str(pokemon.get_attack()),
             str(pokemon.get_defense()),
             str(pokemon.get_speed())
@@ -649,8 +655,8 @@ class PokemonListElem(AbstractFrame):
         stats_surf = main_font.render(
             stats_text, True, main_color)
         stats_rect = stats_surf.get_rect(
-            bottomleft=(x + 80, y + 45))
-        text_list.append(stats_surf, stats_rect)
+            bottomleft=(x + 10, y + 50 + 60 * index))
+        text_list.append((stats_surf, stats_rect))
 
         types = pokemon.get_types()
         type_1 = str(types[0]).title()
@@ -660,21 +666,23 @@ class PokemonListElem(AbstractFrame):
         types_surf = main_font.render(
             types_text, True, main_color)
         types_rect = types_surf.get_rect(
-            bottomright=(x + 380, y + 45))
-        text_list.append(types_surf, types_rect)
+            bottomright=(x + 380, y + 50 + 60 * index))
+        text_list.append((types_surf, types_rect))
 
         self._text_objects = tuple(text_list)
 
-    def get_draw_values(self) -> tuple[tuple[
+    def get_draw_values(self, index: int) -> tuple[tuple[
                 tuple[int, int, int], pygame.Rect,
                 tuple[int, int, int], pygame.Rect],
             tuple[tuple[pygame.surface.Surface, pygame.Rect]]
             ]:
-        self._frame_rect.y = self._original_y_pos - self._dynamic_elevation
-        self._text_rect.center = self._frame_rect.center
-        self._bg_rect.midtop = self._frame_rect.midtop
-        self._bg_rect.height = float(self._frame_rect.height
-                                     + self._dynamic_elevation)
+
+        x, y = self.get_pos()
+        y = y + 60 * index
+        self._frame_rect = pygame.Rect((x, y), self.get_size())
+        self._bg_rect = pygame.Rect((x, y), self.get_size())
+
+        self._set_elem_texts(index)
 
         self.check_click()
 
@@ -713,7 +721,7 @@ class PokemonList(AbstractFrame):
                  object_style='normal') -> None:
 
         size_x = 400
-        size_y = 430
+        size_y = 370
 
         super().__init__((size_x, size_y), pos, object_style)
 
@@ -735,9 +743,10 @@ class PokemonList(AbstractFrame):
     # Setters
 
     def add_elem_to_list(self, object: GamePokemon) -> None:
-        if not isinstance(object, PokemonListElem):
+        if not isinstance(object, GamePokemon):
             raise InvalidDataTypeError('Given object is invalid')
-        self._pokemon_list.append(object)
+        self._elem_list.append(
+            PokemonListElem(object, self.get_pos()))
 
     def remove_selected_object(self) -> None:
         if self.get_selected_elem():
@@ -795,10 +804,9 @@ class PokemonList(AbstractFrame):
                 - First tuple: frame rectangle\n
                 - Second tuple: tuples with text surf and rect objects
         """
-
         draw_elements = []
-        for elem in self.get_elem_list():
-            draw_elements.append(elem.get_draw_values())
+        for idx, elem in enumerate(self.get_elem_list()):
+            draw_elements.append(elem.get_draw_values(idx))
 
         return ((self._bg_color, self._bg_rect,
                 self._frame_color, self._frame_rect),

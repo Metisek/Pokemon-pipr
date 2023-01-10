@@ -5,7 +5,8 @@ from classes import BasePokemon
 from classes import (
     InvalidDataTypeError,
     InvalidObjectTypeError,
-    MalformedDataError
+    MalformedDataError,
+    NotANumberError
 )
 from tkinter import ttk
 
@@ -95,7 +96,18 @@ class TkPokemonSelectWindow:
         Returns:
             BasePokemon | None: Choosen pokemon or None if not added
         """
-        return self._choosen_pokemon
+        if isinstance(self._choosen_pokemon, type(None)):
+            return self._choosen_pokemon
+        try:
+            self._choosen_pokemon = int(self._choosen_pokemon)
+            pokemon = self._database.get_pokemon_using_pokedex_number(
+                self._choosen_pokemon
+                )
+        except NotANumberError:
+            pokemon = self._database.get_pokemon_using_name(
+                self._choosen_pokemon
+                )
+        return pokemon
 
     def _get_window(self) -> (tk.Tk | None):
         """Gets currently open window or None is not opened

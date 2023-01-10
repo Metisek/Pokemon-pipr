@@ -277,13 +277,13 @@ class PyGameObjectsDatabase:
                 'player_one_init': {
                     'pokemon_list': PokemonList((350, 50)),
                     'add_pokemon_button': Button(
-                        'ADD', (95, 40), (50, 490), 'inactive'
+                        'ADD', (95, 50), (50, 470)
                         ),
                     'remove_pokemon_button': Button(
-                        'REMOVE', (95, 40), (155, 490), 'inactive'
+                        'REMOVE', (95, 50), (155, 470), 'inactive'
                         ),
                     'continue_button': Button(
-                        'CONTINUE', (200, 40), (550, 490), 'inactive'
+                        'CONTINUE', (200, 50), (550, 470), 'inactive'
                         ),
                     'add_pokeballs_button':  Button(
                         '+', (40, 40), (550, 540)

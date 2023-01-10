@@ -27,5 +27,6 @@ FONTS = {
     'GUI_FONT': pygame.font.SysFont("arialblack", 25),
     'BIG_FONT': pygame.font.SysFont("arial", 50),
     'MEDIUM_FONT': pygame.font.SysFont("calibri", 34),
-    'SMALL_FONT': pygame.font.SysFont("calibri", 20)
+    'SMALL_FONT': pygame.font.SysFont("calibri", 20),
+    'SMALLER_FONT': pygame.font.SysFont("calibri", 12)
 }

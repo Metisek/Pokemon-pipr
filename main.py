@@ -1,5 +1,5 @@
 import pygame
-from pygame_objects import Button, PokemonList
+from pygame_objects import Button, PokemonList, PokemonListElem
 from attributes import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -108,10 +108,11 @@ class Screen:
         for elem in pokemons_frame:
             pygame.draw.rect(screen, elem[0][0],
                              elem[0][1], border_radius=12)
-            pygame.draw.rect(screen, main_frame[0][2],
-                             pygame.Rect(main_frame[0][3]),
+            pygame.draw.rect(screen, elem[0][2],
+                             pygame.Rect(elem[0][3]),
                              3, border_radius=12)
-            screen.blit(draw_val[1][0], draw_val[1][1])
+            for texts in elem[1]:
+                screen.blit(texts[0], texts[1])
 
     def _draw_button(self, button_object: Button) -> None:
         screen = self._get_screen()
@@ -164,7 +165,11 @@ class PokemonGame:
             ):
         self._player_two_pokemons = pokemons
 
-    def raised_event(self, object_key):
+    def get_list_elems(self, object_key) -> list[PokemonListElem]:
+        object = self.get_active_objects()[object_key]
+        return object.get_elem_list()
+
+    def raised_event(self, object_key) -> bool:
         active_objects = self.get_active_objects()
         try:
             object = active_objects.get(object_key)
@@ -233,12 +238,23 @@ def main():
 
         elif g_state == 'game_init':
             if m_state == 'player_one_init':
+                for elem in game.get_list_elems('pokemon_list'):
+                    if elem.raise_event():
+                        if elem.get_event_type() == 'Select':
+                            pass
+                        elif elem.get_event_type() == 'Deselect':
+                            pass
                 if game.raised_event('add_pokemon_button'):
                     tk_sel_window.show_window()
                     if tk_sel_window.get_choosen_pokemon():
+                        add_pok = tk_sel_window.get_choosen_pokemon()
                         game.add_pokemon_to_player(
                             tk_sel_window.get_choosen_pokemon(), 1
                         )
+                        game_list = game.get_active_objects().get(
+                            'pokemon_list'
+                            )
+                        game_list.add_elem_to_list(GamePokemon(add_pok))
 
         # Game draw static objects
 
