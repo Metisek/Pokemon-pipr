@@ -16,6 +16,10 @@ from attributes import (
 #     RedundantKeyError
 # )
 
+from classes import (
+    RedundantKeyError
+)
+
 from tk_objects import TkPokemonSelectWindow
 from database import PyGameObjectsDatabase, TextDatabase
 from classes import BasePokemon, GamePokemon
@@ -131,14 +135,49 @@ class PokemonGame:
         self._player_count = None
         self._player_one_pokemons = []
         self._player_two_pokemons = []
+        self._player_one_pokemon_number = 1
+        self._player_one_pokemon_number = 1
+        self._selected_pokemon = None
+        self._selected_frame = None
         self._objects_database = PyGameObjectsDatabase()
 
-    def add_pokemon_to_player(self, pokemon: BasePokemon, player):
+    def reset_game(self):
+        self._player_one_pokemons = []
+        self._player_two_pokemons = []
+        self._player_one_pokemon_number = 1
+        self._player_one_pokemon_number = 1
+        self._selected_pokemon = None
+        self._selected_frame = None
+
+    def get_selected_pokemon(self) -> GamePokemon | None:
+        return self._selected_pokemon
+
+    def set_selected_pokemon(self, pokemon: GamePokemon) -> None:
+        self._selected_pokemon = pokemon
+
+    def get_selected_frame(self) -> PokemonListElem | None:
+        return self._selected_frame
+
+    def set_selected_frame(self, frame: PokemonListElem) -> None:
+        self._selected_frame = frame
+
+    def add_pokemon_to_player(self, pokemon: GamePokemon, player):
         if player == 1:
             pokemons = self.get_player_one_pokemons()
         elif player == 2:
             pokemons = self.get_player_two_pokemons()
         pokemons.append(pokemon)
+        self.set_player_pokemons(pokemons, player)
+
+    def remove_pokemon_from_player(self, pokemon: GamePokemon, player):
+        if player == 1:
+            pokemons = self.get_player_one_pokemons()
+        elif player == 2:
+            pokemons = self.get_player_two_pokemons()
+        for idx, elem in enumerate(pokemons):
+            if elem == pokemon:
+                pokemons.pop(idx)
+                break
         self.set_player_pokemons(pokemons, player)
 
     def get_player_one_pokemons(self):
@@ -169,12 +208,19 @@ class PokemonGame:
         object = self.get_active_objects()[object_key]
         return object.get_elem_list()
 
-    def raised_event(self, object_key) -> bool:
+    def get_object(self, object_key):
         active_objects = self.get_active_objects()
         try:
-            object = active_objects.get(object_key)
+            object = active_objects[object_key]
+            return object
+        except KeyError:
+            raise RedundantKeyError('Given object does not exist')
+
+    def raised_event(self, object_key) -> bool:
+        try:
+            object = self.get_object(object_key)
             return object.raise_event()
-        except BaseException:
+        except Exception:
             return False
 
     def get_active_objects(self):
@@ -241,20 +287,51 @@ def main():
                 for elem in game.get_list_elems('pokemon_list'):
                     if elem.raise_event():
                         if elem.get_event_type() == 'Select':
-                            pass
+                            for elem_check in game.get_list_elems(
+                                'pokemon_list'):
+                                if not elem_check.raise_event():
+                                    elem_check.deselect_elem()
+                            game.get_object(
+                                'remove_pokemon_button'
+                                ).set_object_style('normal')
+                            game.set_selected_pokemon(
+                                elem.get_elem_object()
+                                )
+                            game.set_selected_frame(elem)
                         elif elem.get_event_type() == 'Deselect':
-                            pass
+                            game.get_object(
+                                'remove_pokemon_button'
+                                ).set_object_style('inactive')
+                            game.set_selected_pokemon(None)
+                            game.set_selected_frame(None)
                 if game.raised_event('add_pokemon_button'):
                     tk_sel_window.show_window()
                     if tk_sel_window.get_choosen_pokemon():
                         add_pok = tk_sel_window.get_choosen_pokemon()
-                        game.add_pokemon_to_player(
-                            tk_sel_window.get_choosen_pokemon(), 1
-                        )
+                        add_pok = GamePokemon(add_pok)
+                        game.add_pokemon_to_player(add_pok, 1)
                         game_list = game.get_active_objects().get(
                             'pokemon_list'
                             )
-                        game_list.add_elem_to_list(GamePokemon(add_pok))
+                        game_list.add_elem_to_list(add_pok)
+                elif game.raised_event('remove_pokemon_button'):
+                    object_list = game.get_object('pokemon_list')
+                    selected = game.get_selected_frame()
+                    object_list.remove_selected_object(selected)
+                    game.remove_pokemon_from_player(
+                        game.get_selected_pokemon(), 1
+                        )
+                    game.set_selected_pokemon(None)
+                    game.set_selected_frame(None)
+                    game.get_object(
+                        'remove_pokemon_button'
+                            ).set_object_style('inactive')
+                elif game.raised_event('continue_button'):
+                    pass
+                elif game.raised_event('add_pokeballs_button'):
+                    pass
+                elif game.raised_event('remove_pokeballs_button'):
+                    pass
 
         # Game draw static objects
 

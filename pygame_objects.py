@@ -1,4 +1,5 @@
 import pygame
+
 from classes import GamePokemon
 from classes import (
     BadConversionError,
@@ -311,6 +312,14 @@ class AbstractFrame(AbstractWidget):
         return (self._bg_rect, self._bg_color)
 
     # Setters
+
+    def set_object_style(self, object_style: str) -> None:
+        try:
+            check_if_valid_key(object_style, self._colors_dict.keys())
+            check_if_valid_key(object_style, self._fonts_dict.keys())
+        except RedundantKeyError:
+            raise RedundantKeyError('Given button type does not exist')
+        self._object_style = object_style
 
     def _set_frame_pos(self) -> None:
         """Sets current frame to saved position
@@ -700,20 +709,28 @@ class PokemonListElem(AbstractFrame):
             self.set_inactive_frame_colors()
         mouse_pos = pygame.mouse.get_pos()
         if self._frame_rect.collidepoint(mouse_pos):
-            self.set_active_frame_colors()
+            if self.get_elem_is_selected():
+                self.set_active_frame_colors()
+            else:
+                self.set_inactive_frame_colors()
             if pygame.mouse.get_pressed()[0]:
                 self._is_pressed = True
             elif self._is_pressed is True:
                 self._raise_event = True
                 if self.get_elem_is_selected():
                     self._event_type = 'Deselect'
+                    self._is_selected = False
+                    self.set_inactive_frame_colors()
                 else:
                     self._event_type = 'Select'
-                self._is_selected = not (self._is_selected)
+                    self._is_selected = True
+                    self.set_active_frame_colors()
+                self._is_pressed = False
 
         else:
             self._is_pressed = False
-            self.set_inactive_frame_colors()
+            if not self.get_elem_is_selected():
+                self.set_inactive_frame_colors()
 
 
 class PokemonList(AbstractFrame):
@@ -734,9 +751,6 @@ class PokemonList(AbstractFrame):
 
     # Getters
 
-    def get_selected_elem(self) -> PokemonListElem:
-        return self._selected_elem
-
     def get_elem_list(self) -> list[PokemonListElem]:
         return self._elem_list
 
@@ -748,9 +762,12 @@ class PokemonList(AbstractFrame):
         self._elem_list.append(
             PokemonListElem(object, self.get_pos()))
 
-    def remove_selected_object(self) -> None:
-        if self.get_selected_elem():
-            self._pokemon_list.pop(self.get_selected_elem())
+    def remove_selected_object(self, selected: PokemonListElem) -> None:
+        for elem in self.get_elem_list():
+            if elem == selected:
+                self._elem_list.pop(
+                    self._elem_list.index(elem)
+                    )
 
     def set_list_pos(self, pos: tuple[int, int]) -> None:
         """Changes button position and automatically moves to it
