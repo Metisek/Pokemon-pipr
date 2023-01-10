@@ -212,7 +212,21 @@ class AbstractFrame(AbstractWidget):
                 'frame_active': COLORS.get('INPURE_WHITE'),
                 'bg_inactive': COLORS.get('BLUEISH_BLACK'),
                 'bg_active': COLORS.get('DARK_BLUE')
-            }
+            },
+            'no_frame': {
+                'frame_inactive': COLORS.get('BLUEISH_BLACK'),
+                'frame_active': COLORS.get('DARK_BLUE'),
+                'bg_inactive': COLORS.get('BLUEISH_BLACK'),
+                'bg_active': COLORS.get('DARK_BLUE'),
+                'font_color': COLORS.get('LIGHT_GRAY')
+            },
+            'no_frame_inactive': {
+                'frame_inactive': COLORS.get('INPURE_BLACK'),
+                'frame_active': COLORS.get('INPURE_BLACK'),
+                'bg_inactive': COLORS.get('INPURE_BLACK'),
+                'bg_active': COLORS.get('INPURE_BLACK'),
+                'font_color': COLORS.get('DARK_GRAY')
+            },
         }
         self._fonts_dict = {
             'normal': FONTS.get('GUI_FONT'),
@@ -502,8 +516,192 @@ class Button(AbstractFrame):
             self._dynamic_elevation = self._elevation
 
 
+class PokemonListElem(AbstractFrame):
+    def __init__(self, object: GamePokemon,
+                 pos: tuple[float, float], object_style='no_frame') -> None:
+
+        size_x = 390
+        size_y = 60
+        x, y = pos
+
+        super().__init__((size_x, size_y), (x + 5, y + 5), object_style)
+
+        # Init checks
+        if not isinstance(object, GamePokemon):
+            raise InvalidDataTypeError('Given text is not a string')
+
+        # Core attributes
+        self._is_pressed = False
+        self._pokemon = object
+        self._text_objects = ()
+        self._set_elem_texts()
+
+        # Getters
+
+    def get_elem_is_pressed(self) -> bool:
+        """ Checks if given element is currently pressed.
+
+        Returns:
+           bool : True if elem is pressed, false otherwise
+        """
+        return self._is_pressed
+
+    def get_elem_object(self) -> GamePokemon:
+        """ Checks given elements pokemon text and returns it.
+
+        Returns:
+           GamePokemon: GamePokemon object
+        """
+        return self._pokemon
+
+    def _get_text_draw_values(self) -> tuple[
+            tuple[pygame.surface.Surface, pygame.Rect]]:
+        """Gets currently active text draw values
+
+        Returns:
+            tuple[ tuple[pygame.surface.Surface, pygame.Rect]]: All
+            text rectangles and surfaces
+        """
+        return self._text_objects
+
+    # Main functions
+
+    def _set_elem_texts(self) -> None:
+        """Gets every single text with variables and sets tuple
+        of Surface and Rect tuples: tuple[tuple[
+            pygame.surface.Surface, pygame.rect.Rect]]
+        """
+        # Init variables
+
+        pokemon = self.get_elem_object()
+        main_color = self.get_color('font_color')
+        main_font = FONTS.get('SMALL_FONT')
+        medium_font = FONTS.get('MEDIUM_FONT')
+        x, y = self.get_pos()
+        text_list = []
+
+        # Text variables
+
+        name_text = str(pokemon.get_name())
+        name_surf = medium_font.render(
+            name_text, True, main_color)
+        name_rect = name_surf.get_rect(
+            topleft=(x + 10, y + 10))
+        text_list.append(name_surf, name_rect)
+
+        hp_text = 'HP: {}/{}'.format(
+            str(pokemon.get_hp()), str(pokemon.get_max_hp())
+        )
+        hp_surf = medium_font.render(
+            hp_text, True, main_color)
+        hp_rect = hp_surf.get_rect(
+            topleft=(x + 290, y + 10))
+        text_list.append(hp_surf, hp_rect)
+
+        stats_text = 'ATT: {}  DEF: {}  SPD: {}'.format(
+            str(pokemon.get_attack()),
+            str(pokemon.get_defense()),
+            str(pokemon.get_speed())
+        )
+        stats_surf = main_font.render(
+            stats_text, True, main_color)
+        stats_rect = stats_surf.get_rect(
+            bottomleft=(x + 80, y + 45))
+        text_list.append(stats_surf, stats_rect)
+
+        types = pokemon.get_types()
+        type_1 = str(types[0]).title()
+        type_2 = str(types[1]).title() if types[1] else None
+        types_text = str('{}, {}'.format(type_1, type_2) if type_2
+                         else '{}'.format(type_1))
+        types_surf = main_font.render(
+            types_text, True, main_color)
+        types_rect = types_surf.get_rect(
+            bottomright=(x + 380, y + 45))
+        text_list.append(types_surf, types_rect)
+
+        self._text_objects = tuple(text_list)
+
+
+    def get_draw_values(self) -> tuple[tuple[
+            tuple[int, int, int], pygame.Rect, tuple[int, int, int], pygame.Rect
+                ], tuple[tuple[pygame.surface.Surface, pygame.Rect]
+                ]
+            ]:
+        self._frame_rect.y = self._original_y_pos - self._dynamic_elevation
+        self._text_rect.center = self._frame_rect.center
+        self._bg_rect.midtop = self._frame_rect.midtop
+        self._bg_rect.height = float(self._frame_rect.height
+                                     + self._dynamic_elevation)
+
+        self.check_click()
+
+        return ((self._bg_color, self._bg_rect,
+                self._frame_color, self._frame_rect),
+                self._get_text_draw_values())
+
+    def check_click(self):
+        """Function checks if mouse is over button, if it's clicked, and if
+        it's raises event for game mainloop
+        """
+        self._dynamic_elevation = 2
+        self._raise_event = False
+        if self.get_object_style() == 'inactive':
+            self.set_inactive_object_colors()
+        mouse_pos = pygame.mouse.get_pos()
+        if self._frame_rect.collidepoint(mouse_pos):
+            self.set_active_button_colors()
+            if pygame.mouse.get_pressed()[0]:
+                self._dynamic_elevation = 0
+                self._is_pressed = True
+                self.set_text(self.get_button_text())
+            else:
+                self._dynamic_elevation = self._elevation
+                if self._is_pressed is True:
+                    self._raise_event = True
+                    self._is_pressed = False
+                    self.set_text(self.get_button_text())
+        else:
+            self._is_pressed = False
+            self.set_inactive_button_colors()
+            self._dynamic_elevation = self._elevation
+
+
+
+
+
 class PokemonList(AbstractFrame):
-    pass
+    def __init__(self, pos: tuple[float, float],
+                 object_style='normal') -> None:
+
+        size_x = 400
+        size_y = 430
+
+        super().__init__((size_x, size_y), pos, object_style)
+
+        # Core attributes
+
+        self._selected_elem = None
+        self._pokemon_list = []
+
+    # Getters
+
+    def get_selected_elem(self) -> PokemonListElem:
+        return self._selected_elem
+
+    def get_pokemon_list(self) -> list[GamePokemon]:
+        return self._pokemon_list
+
+    # Setters
+
+    def add_elem_to_list(self, object: GamePokemon) -> None:
+        if not isinstance(object, PokemonListElem):
+            raise InvalidDataTypeError('Given object is invalid')
+        self._pokemon_list.append(object)
+
+    def remove_selected_object(self) -> None:
+        if self.get_selected_elem():
+            self._pokemon_list.pop(self.get_selected_elem())
 
 
 class PokemonFrame(AbstractWidget):
