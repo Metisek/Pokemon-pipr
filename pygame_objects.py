@@ -532,11 +532,12 @@ class PokemonListElem(AbstractFrame):
 
         # Core attributes
         self._is_pressed = False
+        self._is_selected = False
         self._pokemon = object
         self._text_objects = ()
         self._set_elem_texts()
 
-        # Getters
+    # Getters
 
     def get_elem_is_pressed(self) -> bool:
         """ Checks if given element is currently pressed.
@@ -545,6 +546,14 @@ class PokemonListElem(AbstractFrame):
            bool : True if elem is pressed, false otherwise
         """
         return self._is_pressed
+
+    def get_elem_is_selected(self) -> bool:
+        """ Checks if given element is currently selected.
+
+        Returns:
+           bool : True if elem is selected, false otherwise
+        """
+        return self._is_selected
 
     def get_elem_object(self) -> GamePokemon:
         """ Checks given elements pokemon text and returns it.
@@ -564,7 +573,41 @@ class PokemonListElem(AbstractFrame):
         """
         return self._text_objects
 
+    # Setters
+
+    def _set_frame_pos(self, pos: tuple[int, int]) -> None:
+        """Changes button position and automatically moves to it
+
+        Args:
+            pos (tuple[int, int]): Left x Top coordinates for object
+
+        Raises:
+            InvalidDataTypeError: Given values are not iterable
+            InvalidDataLineLeghthError: Given tuple size is not equal 2
+            NotANumberError: Given value is not a number
+            ValueError: Given value is not greater or equal 0
+        """
+        self.change_frame_pos(pos)
+        self._set_elem_texts()
+
+    def set_active_frame_colors(self) -> None:
+        """Changes given object colors to its 'active' values
+        """
+        self._set_bg_color(self.get_color('bg_active'))
+        self._set_frame_color(self.get_color('frame_active'))
+
+    def set_inactive_frame_colors(self) -> None:
+        """Changes given object colors to its 'inactive' values
+        """
+        self._set_bg_color(self.get_color('bg_inactive'))
+        self._set_frame_color(self.get_color('frame_inactive'))
+
     # Main functions
+
+    def deselect_elem(self):
+        """ Sets currently item selection value
+        """
+        self._is_selected = False
 
     def _set_elem_texts(self) -> None:
         """Gets every single text with variables and sets tuple
@@ -622,11 +665,10 @@ class PokemonListElem(AbstractFrame):
 
         self._text_objects = tuple(text_list)
 
-
     def get_draw_values(self) -> tuple[tuple[
-            tuple[int, int, int], pygame.Rect, tuple[int, int, int], pygame.Rect
-                ], tuple[tuple[pygame.surface.Surface, pygame.Rect]
-                ]
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+            tuple[tuple[pygame.surface.Surface, pygame.Rect]]
             ]:
         self._frame_rect.y = self._original_y_pos - self._dynamic_elevation
         self._text_rect.center = self._frame_rect.center
@@ -644,30 +686,26 @@ class PokemonListElem(AbstractFrame):
         """Function checks if mouse is over button, if it's clicked, and if
         it's raises event for game mainloop
         """
-        self._dynamic_elevation = 2
         self._raise_event = False
-        if self.get_object_style() == 'inactive':
-            self.set_inactive_object_colors()
+        self._event_type = None
+        if self.get_object_style() == 'no_frame_inactive':
+            self.set_inactive_frame_colors()
         mouse_pos = pygame.mouse.get_pos()
         if self._frame_rect.collidepoint(mouse_pos):
-            self.set_active_button_colors()
+            self.set_active_frame_colors()
             if pygame.mouse.get_pressed()[0]:
-                self._dynamic_elevation = 0
                 self._is_pressed = True
-                self.set_text(self.get_button_text())
-            else:
-                self._dynamic_elevation = self._elevation
-                if self._is_pressed is True:
-                    self._raise_event = True
-                    self._is_pressed = False
-                    self.set_text(self.get_button_text())
+            elif self._is_pressed is True:
+                self._raise_event = True
+                if self.get_elem_is_selected():
+                    self._event_type = 'Deselect'
+                else:
+                    self._event_type = 'Select'
+                self._is_selected = not (self._is_selected)
+
         else:
             self._is_pressed = False
-            self.set_inactive_button_colors()
-            self._dynamic_elevation = self._elevation
-
-
-
+            self.set_inactive_frame_colors()
 
 
 class PokemonList(AbstractFrame):
@@ -682,15 +720,15 @@ class PokemonList(AbstractFrame):
         # Core attributes
 
         self._selected_elem = None
-        self._pokemon_list = []
+        self._elem_list = []
 
     # Getters
 
     def get_selected_elem(self) -> PokemonListElem:
         return self._selected_elem
 
-    def get_pokemon_list(self) -> list[GamePokemon]:
-        return self._pokemon_list
+    def get_elem_list(self) -> list[PokemonListElem]:
+        return self._elem_list
 
     # Setters
 
@@ -702,6 +740,59 @@ class PokemonList(AbstractFrame):
     def remove_selected_object(self) -> None:
         if self.get_selected_elem():
             self._pokemon_list.pop(self.get_selected_elem())
+
+    # Main functions
+
+    def get_draw_values(self) -> tuple[tuple[
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+            tuple[tuple[tuple[
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+                tuple[pygame.surface.Surface, pygame.Rect]]]]:
+        """Gets every single used value to draw pokemon list
+
+        Returns:
+            tuple[
+                tuple[
+                    tuple[int, int, int], pygame.Rect,
+                    tuple[int, int, int], pygame.Rect
+                    ],
+                tuple[
+                    tuple[
+                        tuple[
+                            tuple[int, int, int], pygame.Rect,
+                            tuple[int, int, int], pygame.Rect
+                            ],
+                        tuple[
+                            tuple[
+                                pygame.surface.Surface, pygame.Rect
+                                ]
+                            ]
+                    ]
+                ]
+            ]: Tuple with given values:\n
+            - First tuple: main tuple with main list frame
+            - Second tuple: tuple with PokemonListFrame draw values:\n
+                - First tuple: frame rectangle\n
+                - Second tuple: tuples with text surf and rect objects
+        """
+
+        draw_elements = []
+        for elem in self.get_elem_list():
+            draw_elements.append(elem.get_draw_values())
+
+        self._frame_rect.y = self._original_y_pos - self._dynamic_elevation
+        self._text_rect.center = self._frame_rect.center
+        self._bg_rect.midtop = self._frame_rect.midtop
+        self._bg_rect.height = float(self._frame_rect.height
+                                     + self._dynamic_elevation)
+
+
+
+        return ((self._bg_color, self._bg_rect,
+                self._frame_color, self._frame_rect),
+                self._get_text_draw_values())
 
 
 class PokemonFrame(AbstractWidget):
