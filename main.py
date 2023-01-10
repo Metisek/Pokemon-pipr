@@ -7,14 +7,14 @@ from attributes import (
     FONTS,
     COLORS
 )
-from classes import (
-    MalformedPokemonDataError,
-    PokemonDataDoesNotExistError,
-    DataDoesNotExistError,
-    BadConversionError,
-    InvalidDataTypeError,
-    RedundantKeyError
-)
+# from classes import (
+#     MalformedPokemonDataError,
+#     PokemonDataDoesNotExistError,
+#     DataDoesNotExistError,
+#     BadConversionError,
+#     InvalidDataTypeError,
+#     RedundantKeyError
+# )
 
 from tk_objects import TkPokemonSelectWindow
 from database import PyGameObjectsDatabase, TextDatabase

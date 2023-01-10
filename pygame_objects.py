@@ -365,7 +365,9 @@ class Button(AbstractFrame):
         self._text_surf = self.get_font().render(
             text, True, self.get_color('frame_inactive')
         )
-        self._text_rect = self._set_text_pos()
+        self._text_rect = self._text_surf.get_rect(
+            center=self._frame_rect.center
+            )
 
     # Getters
 
@@ -436,14 +438,14 @@ class Button(AbstractFrame):
     def set_active_button_colors(self) -> None:
         """Changes given object colors to its 'active' values
         """
-        self.set_text(self.get_button_text(), True)
+        self.set_text(self.get_button_text())
         self._set_bg_color(self.get_color('bg_active'))
         self._set_frame_color(self.get_color('frame_active'))
 
     def set_inactive_button_colors(self) -> None:
         """Changes given object colors to its 'inactive' values
         """
-        self.set_text(self.get_button_text(), False)
+        self.set_text(self.get_button_text())
         self._set_bg_color(self.get_color('bg_inactive'))
         self._set_frame_color(self.get_color('frame_inactive'))
 
@@ -487,13 +489,13 @@ class Button(AbstractFrame):
             if pygame.mouse.get_pressed()[0]:
                 self._dynamic_elevation = 0
                 self._is_pressed = True
-                self.set_text(self.get_button_text(), True)
+                self.set_text(self.get_button_text())
             else:
                 self._dynamic_elevation = self._elevation
                 if self._is_pressed is True:
                     self._raise_event = True
                     self._is_pressed = False
-                    self.set_text(self.get_button_text(), True)
+                    self.set_text(self.get_button_text())
         else:
             self._is_pressed = False
             self.set_inactive_button_colors()

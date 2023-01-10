@@ -11,6 +11,10 @@ class MalformedPokemonDataError(Exception):
     pass
 
 
+class MalformedDataError(Exception):
+    pass
+
+
 class PokemonDataDoesNotExistError(Exception):
     pass
 
@@ -24,6 +28,10 @@ class BadConversionError(ValueError):
 
 
 class InvalidDataTypeError(TypeError):
+    pass
+
+
+class InvalidObjectTypeError(TypeError):
     pass
 
 

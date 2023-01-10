@@ -5,9 +5,11 @@ from classes import (
     BadConversionError,
     DataDoesNotExistError,
     BasePokemon,
-    NotANumberError
+    NotANumberError,
+    RedundantKeyError
 )
 from pygame_objects import Button
+from model_io import check_if_valid_key
 
 
 class PokemonDatabase:
@@ -243,7 +245,11 @@ class PokemonDatabase:
 
 
 class PyGameObjectsDatabase:
+    """Database with every single object used in every game menu
+    """
     def __init__(self) -> None:
+        """Inits saved object as dict of given game and menu states
+        """
         self._objects_base_dict = {
             'main_menu': {
                 'main_menu': {
@@ -316,32 +322,85 @@ class PyGameObjectsDatabase:
             }
         }
 
-    def get_full_database(self):
+    def get_full_database(self) -> dict:
+        """Gets full database dict and returns it
+
+        Returns:
+            dict: dict of game objects
+        """
         return self._objects_base_dict
 
-    def get_active_objects(self, game_state, menu_state):
-        database_game_part = self.get_full_database().get(game_state)
-        database_menu_part = database_game_part.get(menu_state)
+    def get_active_objects(self, game_state: str, menu_state: str) -> dict:
+        """Gets objects of given game and menu state
+
+        Args:
+            game_state (str): Game state key
+            menu_state (str): Menu state key
+
+        Raises:
+            RedundantKeyError: Given state does not exist in database
+
+        Returns:
+            dict: Dict of active objects
+        """
+        try:
+            database_game_part = self.get_full_database()[game_state]
+            database_menu_part = database_game_part[menu_state]
+        except KeyError:
+            raise RedundantKeyError('Given states does not exist in database')
         return database_menu_part
 
 
 class TextDatabase:
+    """Database with all used text variables outside Button
+    or PokemonList objects
+    """
     def __init__(self) -> None:
+        """Fully inits saved text database as dict of strings
+        """
         self._text_dict = {
-            'credits': """Autor: Mateusz Bojarski
+            'credits': """
+\bAutor: Mateusz Bojarski
 Projekt zaliczeniowy PIPR 2022Z
 
 
 
 2022 - 2023
-:)
-Nata jest spoko""",
+:)""",
 
             }
 
-    def get_text(self, key):
+    def get_text(self, key: str) -> tuple:
+        """Gets text from database and returns it with removed newline signs.
+        Throws exception if given key is not a string or is not in database.
+
+        Args:
+            key (str): Key as str.
+
+        Raises:
+            BadConversionError: Given key is not a string
+            RedundantKeyError: Given key does not exist in database
+
+        Returns:
+            tuple: Tuple with strings with \\n sign used as separator
+        """
+        try:
+            str(key)
+            check_if_valid_key(key, self._text_dict.keys())
+        except TypeError:
+            raise BadConversionError('Given key is not a string')
+        except RedundantKeyError:
+            raise RedundantKeyError('Given key does not exist in database')
         return self.get_splitted_text(self._text_dict.get(key))
 
-    def get_splitted_text(self, text: str):
+    def get_splitted_text(self, text: str) -> tuple:
+        """Splits text with \\n sign and removes tabs
+
+        Args:
+            text (str): text variable
+
+        Returns:
+            tuple: splitted text
+        """
         text = text.replace('\t', '')
         return text.split('\n')
