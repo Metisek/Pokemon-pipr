@@ -576,7 +576,7 @@ class PokemonListElem(AbstractFrame):
     # Setters
 
     def _set_frame_pos(self, pos: tuple[int, int]) -> None:
-        """Changes button position and automatically moves to it
+        """Changes frme position and automatically moves to it
 
         Args:
             pos (tuple[int, int]): Left x Top coordinates for object
@@ -741,6 +741,22 @@ class PokemonList(AbstractFrame):
         if self.get_selected_elem():
             self._pokemon_list.pop(self.get_selected_elem())
 
+    def set_list_pos(self, pos: tuple[int, int]) -> None:
+        """Changes button position and automatically moves to it
+
+        Args:
+            pos (tuple[int, int]): Left x Top coordinates for object
+
+        Raises:
+            InvalidDataTypeError: Given values are not iterable
+            InvalidDataLineLeghthError: Given tuple size is not equal 2
+            NotANumberError: Given value is not a number
+            ValueError: Given value is not greater or equal 0
+        """
+        self.change_frame_pos(pos)
+        for elem in self.get_elem_list():
+            elem._set_frame_pos()
+
     # Main functions
 
     def get_draw_values(self) -> tuple[tuple[
@@ -782,17 +798,9 @@ class PokemonList(AbstractFrame):
         for elem in self.get_elem_list():
             draw_elements.append(elem.get_draw_values())
 
-        self._frame_rect.y = self._original_y_pos - self._dynamic_elevation
-        self._text_rect.center = self._frame_rect.center
-        self._bg_rect.midtop = self._frame_rect.midtop
-        self._bg_rect.height = float(self._frame_rect.height
-                                     + self._dynamic_elevation)
-
-
-
         return ((self._bg_color, self._bg_rect,
                 self._frame_color, self._frame_rect),
-                self._get_text_draw_values())
+                tuple(draw_elements))
 
 
 class PokemonFrame(AbstractWidget):

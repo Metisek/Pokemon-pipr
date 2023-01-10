@@ -8,7 +8,7 @@ from classes import (
     NotANumberError,
     RedundantKeyError
 )
-from pygame_objects import Button
+from pygame_objects import Button, PokemonList
 from model_io import check_if_valid_key
 
 
@@ -275,6 +275,7 @@ class PyGameObjectsDatabase:
                 },
             'game_init': {
                 'player_one_init': {
+                    'pokemon_list': PokemonList((300, 20)),
                     'add_pokemon_button': Button(
                         'ADD', (95, 40), (50, 480), 'inactive'
                         ),
