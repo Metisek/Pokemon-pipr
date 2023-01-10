@@ -1,5 +1,5 @@
 import pygame
-from pygame_objects import Button
+from pygame_objects import Button, PokemonList
 from attributes import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -56,13 +56,12 @@ class Screen:
         pygame.display.update()
 
     def draw_objects(self, objects_dict: dict[str]) -> None:
-
         objects = objects_dict.values()
         for object in objects:
             if isinstance(object, Button):
                 self._draw_button(object)
-            else:
-                pass
+            elif isinstance(object, PokemonList):
+                self._draw_list(object)
 
     def draw_clear_text(
             self, pos, text,
@@ -96,6 +95,23 @@ class Screen:
 
     def draw_bg(self):
         self._get_screen().fill(COLORS.get('BG_COLOR'))
+
+    def _draw_list(self, list_object: PokemonList) -> None:
+        screen = self._get_screen()
+        draw_val = list_object.get_draw_values()
+        main_frame = draw_val[0]
+        pokemons_frame = draw_val[1]
+        pygame.draw.rect(screen, main_frame[0],
+                         main_frame[1], border_radius=12)
+        pygame.draw.rect(screen, main_frame[2],
+                         pygame.Rect(main_frame[3]), 3, border_radius=12)
+        for elem in pokemons_frame:
+            pygame.draw.rect(screen, elem[0][0],
+                             elem[0][1], border_radius=12)
+            pygame.draw.rect(screen, main_frame[0][2],
+                             pygame.Rect(main_frame[0][3]),
+                             3, border_radius=12)
+            screen.blit(draw_val[1][0], draw_val[1][1])
 
     def _draw_button(self, button_object: Button) -> None:
         screen = self._get_screen()

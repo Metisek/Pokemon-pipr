@@ -326,7 +326,7 @@ class AbstractFrame(AbstractWidget):
         Args:
             color (tuple[int, int, int]): (R, G, B) values
         """
-        self._frame_color = (color)
+        self._frame_color = color
 
     def _set_bg_color(self, color: tuple[int, int, int]) -> None:
         """Sets current frame background color to given RGB value
@@ -717,6 +717,8 @@ class PokemonList(AbstractFrame):
 
         super().__init__((size_x, size_y), pos, object_style)
 
+        self._bg_color = self.get_color('bg_inactive')
+        self._frame_color = self.get_color('frame_inactive')
         # Core attributes
 
         self._selected_elem = None
