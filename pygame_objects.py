@@ -508,23 +508,24 @@ class Button(AbstractFrame):
         self._raise_event = False
         if self.get_object_style() == 'inactive':
             self.set_inactive_button_colors()
-        mouse_pos = pygame.mouse.get_pos()
-        if self._frame_rect.collidepoint(mouse_pos):
-            self.set_active_button_colors()
-            if pygame.mouse.get_pressed()[0]:
-                self._dynamic_elevation = 0
-                self._is_pressed = True
-                self.set_text(self.get_button_text())
-            else:
-                self._dynamic_elevation = self._elevation
-                if self._is_pressed is True:
-                    self._raise_event = True
-                    self._is_pressed = False
-                    self.set_text(self.get_button_text())
         else:
-            self._is_pressed = False
-            self.set_inactive_button_colors()
-            self._dynamic_elevation = self._elevation
+            mouse_pos = pygame.mouse.get_pos()
+            if self._frame_rect.collidepoint(mouse_pos):
+                self.set_active_button_colors()
+                if pygame.mouse.get_pressed()[0]:
+                    self._dynamic_elevation = 0
+                    self._is_pressed = True
+                    self.set_text(self.get_button_text())
+                else:
+                    self._dynamic_elevation = self._elevation
+                    if self._is_pressed is True:
+                        self._raise_event = True
+                        self._is_pressed = False
+                        self.set_text(self.get_button_text())
+            else:
+                self._is_pressed = False
+                self.set_inactive_button_colors()
+                self._dynamic_elevation = self._elevation
 
 
 class PokemonListElem(AbstractFrame):
@@ -707,30 +708,31 @@ class PokemonListElem(AbstractFrame):
         self._event_type = None
         if self.get_object_style() == 'no_frame_inactive':
             self.set_inactive_frame_colors()
-        mouse_pos = pygame.mouse.get_pos()
-        if self._frame_rect.collidepoint(mouse_pos):
-            if self.get_elem_is_selected():
-                self.set_active_frame_colors()
-            else:
-                self.set_inactive_frame_colors()
-            if pygame.mouse.get_pressed()[0]:
-                self._is_pressed = True
-            elif self._is_pressed is True:
-                self._raise_event = True
-                if self.get_elem_is_selected():
-                    self._event_type = 'Deselect'
-                    self._is_selected = False
-                    self.set_inactive_frame_colors()
-                else:
-                    self._event_type = 'Select'
-                    self._is_selected = True
-                    self.set_active_frame_colors()
-                self._is_pressed = False
-
         else:
-            self._is_pressed = False
-            if not self.get_elem_is_selected():
-                self.set_inactive_frame_colors()
+            mouse_pos = pygame.mouse.get_pos()
+            if self._frame_rect.collidepoint(mouse_pos):
+                if self.get_elem_is_selected():
+                    self.set_active_frame_colors()
+                else:
+                    self.set_inactive_frame_colors()
+                if pygame.mouse.get_pressed()[0]:
+                    self._is_pressed = True
+                elif self._is_pressed is True:
+                    self._raise_event = True
+                    if self.get_elem_is_selected():
+                        self._event_type = 'Deselect'
+                        self._is_selected = False
+                        self.set_inactive_frame_colors()
+                    else:
+                        self._event_type = 'Select'
+                        self._is_selected = True
+                        self.set_active_frame_colors()
+                    self._is_pressed = False
+
+            else:
+                self._is_pressed = False
+                if not self.get_elem_is_selected():
+                    self.set_inactive_frame_colors()
 
 
 class PokemonList(AbstractFrame):
@@ -761,6 +763,15 @@ class PokemonList(AbstractFrame):
             raise InvalidDataTypeError('Given object is invalid')
         self._elem_list.append(
             PokemonListElem(object, self.get_pos()))
+
+    def clear_objects(self):
+        self._elem_list = []
+
+    def set_elem_list(self, pokemon_list: list[GamePokemon]) -> None:
+        elem_list = []
+        for elem in pokemon_list:
+            elem_list.append(PokemonListElem(elem, self.get_pos()))
+        self._elem_list = elem_list
 
     def remove_selected_object(self, selected: PokemonListElem) -> None:
         for elem in self.get_elem_list():
@@ -828,6 +839,37 @@ class PokemonList(AbstractFrame):
         return ((self._bg_color, self._bg_rect,
                 self._frame_color, self._frame_rect),
                 tuple(draw_elements))
+
+
+class PokemonBalls(AbstractWidget):
+    def __init__(self, pos: tuple[float, float]) -> None:
+        size_w = 400
+        size_h = 60
+        super().__init__((size_w, size_h), pos)
+
+        self._small_font = FONTS.get('SMALL_FONT')
+        self._big_font = FONTS.get('BIG_FONT')
+        self._color = COLORS.get('LIGHT_GRAY')
+
+    def get_draw_values(self, pokeballs_count: int) -> tuple[
+        tuple[pygame.surface.Surface, pygame.Rect]
+    ]:
+        x, y = self.get_pos()
+        text_list = []
+        text = 'O'
+
+        for pokeball_index in range(6):
+            if pokeball_index < pokeballs_count:
+                surf = self._big_font.render(text, True, self._color)
+            else:
+                surf = self._small_font.render(text, True, self._color)
+            rect = surf.get_rect(
+                center=(x + 50 * pokeball_index, y))
+
+            text_list.append((surf, rect))
+        return tuple(text_list)
+
+
 
 
 class PokemonFrame(AbstractWidget):

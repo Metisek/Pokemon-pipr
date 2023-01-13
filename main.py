@@ -1,5 +1,5 @@
 import pygame
-from pygame_objects import Button, PokemonList, PokemonListElem
+from pygame_objects import Button, PokemonList, PokemonListElem, PokemonBalls
 from attributes import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -66,6 +66,9 @@ class Screen:
                 self._draw_button(object)
             elif isinstance(object, PokemonList):
                 self._draw_list(object)
+            elif isinstance(object, PokemonBalls):
+                pass
+
 
     def draw_clear_text(
             self, pos, text,
@@ -127,6 +130,12 @@ class Screen:
                          pygame.Rect(draw_val[3]), 3, border_radius=12)
         screen.blit(draw_val[4], draw_val[5])
 
+    def draw_balls(self, object: PokemonBalls, count: int) -> None:
+        screen = self._get_screen()
+        draw_vals = object.get_draw_values(count)
+        for elem in draw_vals:
+            screen.blit(elem[0], elem[1])
+
 
 class PokemonGame:
     def __init__(self):
@@ -136,7 +145,7 @@ class PokemonGame:
         self._player_one_pokemons = []
         self._player_two_pokemons = []
         self._player_one_pokemon_number = 1
-        self._player_one_pokemon_number = 1
+        self._player_two_pokemon_number = 1
         self._selected_pokemon = None
         self._selected_frame = None
         self._objects_database = PyGameObjectsDatabase()
@@ -145,9 +154,74 @@ class PokemonGame:
         self._player_one_pokemons = []
         self._player_two_pokemons = []
         self._player_one_pokemon_number = 1
-        self._player_one_pokemon_number = 1
+        self._player_two_pokemon_number = 1
         self._selected_pokemon = None
         self._selected_frame = None
+
+    def game_init_handle(self, object_type: str, player: int) -> None:
+        pokemon_number = self.get_given_player_pokemon_number(player)
+        pokemon_list = self.get_given_player_pokemon_list(player)
+        if object_type == 'add_pokemon_button':
+            if len(pokemon_list) == pokemon_number:
+                self.get_object(
+                    'add_pokemon_button').set_object_style('inactive')
+            self.get_object(
+                    'remove_pokeballs_button').set_object_style('inactive')
+        elif object_type == 'remove_pokemon_button':
+            self.set_selected_pokemon(None)
+            self.set_selected_frame(None)
+            self.get_object(
+                'remove_pokemon_button').set_object_style('inactive')
+            if pokemon_number > 1:
+                self.get_object(
+                    'remove_pokeballs_button').set_object_style('normal')
+        elif object_type == 'add_pokeballs_button':
+            self.get_object(
+                'remove_pokeballs_button').set_object_style('normal')
+            self.set_given_player_pokemon_number(pokemon_number + 1, player)
+            pokemon_number = self.get_given_player_pokemon_number(player)
+            self.get_object(
+                'add_pokemon_button').set_object_style('normal')
+            if pokemon_number == 6:
+                self.get_object(
+                    'add_pokeballs_button').set_object_style('inactive')
+        elif object_type == 'remove_pokeballs_button':
+            self.set_given_player_pokemon_number(pokemon_number - 1, player)
+            pokemon_number = self.get_given_player_pokemon_number(player)
+            self.get_object(
+                    'add_pokeballs_button').set_object_style('normal')
+            if pokemon_number == len(pokemon_list):
+                self.get_object(
+                    'remove_pokeballs_button').set_object_style('inactive')
+                self.get_object(
+                    'add_pokemon_button').set_object_style('inactive')
+            if pokemon_number == 1:
+                self.get_object(
+                    'remove_pokeballs_button').set_object_style('inactive')
+        if len(pokemon_list) == pokemon_number:
+            self.get_object(
+                'continue_button').set_object_style('normal')
+        else:
+            self.get_object(
+                'continue_button').set_object_style('inactive')
+
+    def get_given_player_pokemon_list(self, player: int):
+        if player == 1:
+            return self.get_player_one_pokemons()
+        else:
+            return self.get_player_two_pokemons()
+
+    def get_given_player_pokemon_number(self, player: int):
+        if player == 1:
+            return self.get_player_one_pokemon_number()
+        else:
+            return self.get_player_two_pokemon_number()
+
+    def set_given_player_pokemon_number(self, value, player: int):
+        if player == 1:
+            self.set_player_one_pokemon_number(value)
+        else:
+            self.set_player_two_pokemon_number(value)
 
     def get_selected_pokemon(self) -> GamePokemon | None:
         return self._selected_pokemon
@@ -185,6 +259,21 @@ class PokemonGame:
 
     def get_player_two_pokemons(self):
         return self._player_two_pokemons
+
+    def get_player_one_pokemon_number(self):
+        return self._player_one_pokemon_number
+
+    def get_player_two_pokemon_number(self):
+        return self._player_two_pokemon_number
+
+    def get_real_players_count(self):
+        return self._player_count
+
+    def set_player_one_pokemon_number(self, value: int):
+        self._player_one_pokemon_number = value
+
+    def set_player_two_pokemon_number(self, value: int):
+        self._player_two_pokemon_number = value
 
     def set_player_pokemons(
         self, pokemons: list[(BasePokemon | GamePokemon)], player
@@ -284,6 +373,7 @@ def main():
 
         elif g_state == 'game_init':
             if m_state == 'player_one_init':
+
                 for elem in game.get_list_elems('pokemon_list'):
                     if elem.raise_event():
                         if elem.get_event_type() == 'Select':
@@ -304,6 +394,7 @@ def main():
                                 ).set_object_style('inactive')
                             game.set_selected_pokemon(None)
                             game.set_selected_frame(None)
+
                 if game.raised_event('add_pokemon_button'):
                     tk_sel_window.show_window()
                     if tk_sel_window.get_choosen_pokemon():
@@ -314,6 +405,8 @@ def main():
                             'pokemon_list'
                             )
                         game_list.add_elem_to_list(add_pok)
+                        game.game_init_handle('add_pokemon_button', 1)
+
                 elif game.raised_event('remove_pokemon_button'):
                     object_list = game.get_object('pokemon_list')
                     selected = game.get_selected_frame()
@@ -321,20 +414,32 @@ def main():
                     game.remove_pokemon_from_player(
                         game.get_selected_pokemon(), 1
                         )
-                    game.set_selected_pokemon(None)
-                    game.set_selected_frame(None)
-                    game.get_object(
-                        'remove_pokemon_button'
-                            ).set_object_style('inactive')
+                    game.game_init_handle('remove_pokemon_button', 1)
+
                 elif game.raised_event('continue_button'):
-                    pass
+                    if game.get_real_players_count() == 2:
+                        game.set_menu_state('player_two_init')
+                    else:
+                        # game.generate_ai_pokemons()
+                        # game.set_menu_state('start_game')
+                        pass
+
                 elif game.raised_event('add_pokeballs_button'):
-                    pass
+                    game.game_init_handle('add_pokeballs_button', 1)
+
                 elif game.raised_event('remove_pokeballs_button'):
-                    pass
+                    game.game_init_handle('remove_pokeballs_button', 1)
+
+                elif game.raised_event('back_button'):
+                    game.get_object('pokemon_list').clear_objects()
+                    game.reset_game()
+                    game.set_menu_state('main_menu')
+                    game.set_game_state('main_menu')
 
         # Game draw static objects
 
+        g_state = game.get_game_state()
+        m_state = game.get_menu_state()
         objects = game.get_active_objects()
         screen.draw_bg()
 
@@ -352,7 +457,10 @@ def main():
                 pass
         elif g_state == 'game_init':
             if m_state == 'player_one_init':
-                pass
+                screen.draw_balls(
+                    game.get_object('pokeballs'),
+                    game.get_player_one_pokemon_number()
+                )
             elif m_state == 'player_two_init':
                 pass
             elif m_state == 'start_game':
