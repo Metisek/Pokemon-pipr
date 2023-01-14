@@ -774,7 +774,7 @@ class GamePokemon(BasePokemon):
         damage = ceil(self._base_attack_algorithm(
             enemy_pokemon, stab, critical
             ))
-        enemy_pokemon.take_damage(damage)
+        enemy_pokemon._take_damage(damage)
 
     def attack_special(self, enemy_pokemon):
         attack_type = "special"
@@ -783,10 +783,10 @@ class GamePokemon(BasePokemon):
         damage = ceil(self._base_attack_algorithm(
             enemy_pokemon, stab, critical
             ))
-        enemy_pokemon.take_damage(damage)
+        enemy_pokemon._take_damage(damage)
 
     def _take_damage(self, value: int) -> None:
-        new_hp = self.get_hp - value
+        new_hp = self.get_hp() - value
         if new_hp < 0:
             new_hp = 0
         self.set_hp(new_hp)
