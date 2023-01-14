@@ -274,7 +274,7 @@ class PyGameObjectsDatabase:
                     },
                 'players_select': {
                     '1_player_button': Button(
-                        '1 player', (200, 60), (300, 250)),
+                        '1 player', (200, 60), (300, 250), 'inactive'),
                     '2_player_button': Button(
                         '2 players', (200, 60), (300, 370)),
                     'back_button': Button(

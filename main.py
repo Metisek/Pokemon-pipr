@@ -200,6 +200,7 @@ class PokemonGame:
         self._selected_frame = None
         self._objects_database = PyGameObjectsDatabase()
         self._player_turn = None
+        self._winner = None
 
     def game_init_handle(self, object_type: str | None, player: int) -> None:
         pokemon_number = self.get_given_player_pokemon_number(player)
@@ -239,7 +240,24 @@ class PokemonGame:
     def game_init_finish(self):
         self.set_given_player_active_pokemon(0, 1)
         self.set_given_player_active_pokemon(0, 2)
+        self.set_game_state('game')
         self._draw_starting_turn()
+        self.get_exact_object(
+            'game', 'player_one', 'player_one_frame').set_active_pokemon(
+                self.get_given_player_poke_list(1)[0]
+            )
+        self.get_exact_object(
+            'game', 'player_one', 'player_two_frame').set_active_pokemon(
+                self.get_given_player_poke_list(2)[0]
+            )
+        self.get_exact_object(
+            'game', 'player_two', 'player_one_frame').set_active_pokemon(
+                self.get_given_player_poke_list(1)[0]
+            )
+        self.get_exact_object(
+            'game', 'player_two', 'player_two_frame').set_active_pokemon(
+                self.get_given_player_poke_list(2)[0]
+            )
 
     def add_pokemon_popup(
             self, tk_window: TkPokemonSelectWindow, player: int) -> None:
@@ -259,8 +277,10 @@ class PokemonGame:
             2)[0].get_speed()
         if player_one_starting_pokemon_spd >= player_two_starting_pokemon_spd:
             self.set_player_turn(1)
+            self.set_menu_state('player_one')
         else:
             self.set_player_turn(2)
+            self.set_menu_state('player_two')
 
     def set_given_player_active_pokemon(self, list_index: int, player: int):
         if player == 1:
@@ -409,6 +429,9 @@ class PokemonGame:
             self.get_game_state(), self.get_menu_state()
         )
 
+    def get_winner(self):
+        return self._winner
+
     def get_game_state(self):
         return self._game_state
 
@@ -435,29 +458,66 @@ class PokemonGame:
         self.get_object('special_list').set_is_visible(False)
 
     # MAIN GAME FUNCTIONS:
-    def attack_pokemon_handle(self, player: int):
-        if player == 1:
-            attacking_pokemon = self.get_given_player_active_pokemon(1)
-            defending_pokemon = self.get_given_player_active_pokemon(2)
-        else:
-            attacking_pokemon = self.get_given_player_active_pokemon(2)
-            defending_pokemon = self.get_given_player_active_pokemon(1)
 
-        attacking_pokemon.attack_basic(defending_pokemon)
+    def _get_pokemons_and_enemy(self, player) -> tuple[
+            int, GamePokemon, GamePokemon]:
+        if player == 1:
+            enemy = 2
+        else:
+            enemy = 1
+        p_pokemon = self.get_given_player_active_pokemon(player)
+        e_pokemon = self.get_given_player_active_pokemon(enemy)
+        return (enemy, p_pokemon, e_pokemon)
+
+    def attack_pokemon_handle(self, player: int):
+        enemy, p_pokemon, e_pokemon = self._get_pokemons_and_enemy(player)
+        p_pokemon.attack_basic(e_pokemon)
+        self.get_object('attack_button').reset_event()
+        self.update_turn(player)
+        if e_pokemon.get_is_alive() is False:
+            self._dead_pokemon_handle(player, enemy)
 
     def block_pokemon_handle(self, player: int):
         pokemon = self.get_given_player_active_pokemon(player)
         pokemon.increase_defense()
+        self.get_object('block_button').reset_event()
+        self.update_turn(player)
 
     def special_pokemon_handle(self, player: int):
-        if player == 1:
-            attacking_pokemon = self.get_given_player_active_pokemon(1)
-            defending_pokemon = self.get_given_player_active_pokemon(2)
-        else:
-            attacking_pokemon = self.get_given_player_active_pokemon(2)
-            defending_pokemon = self.get_given_player_active_pokemon(1)
+        enemy, p_pokemon, e_pokemon = self._get_pokemons_and_enemy(player)
+        p_pokemon.attack_special(e_pokemon)
+        for elem in self.get_object('special_list').get_elem_list():
+            elem.reset_event()
+        self.update_turn(player)
 
-        attacking_pokemon.attack_special(defending_pokemon)
+        if e_pokemon.get_is_alive() is False:
+            self._dead_pokemon_handle(player, enemy)
+
+    def _dead_pokemon_handle(self, player: int, enemy: int):
+        self.get_object('game_pokemon_list').set_elem_list(
+                    self.get_given_player_poke_list(enemy)
+                )
+        self._set_given_player_pokemon_number(
+            self.get_given_player_pokemon_number(enemy) - 1, enemy)
+        if self.get_given_player_pokemon_number(enemy) == 0:
+            self.draw_winner(player)
+        else:
+            self._deactivate_game_buttons()
+            self.get_object('game_pokemon_list').set_is_visible(True)
+
+    def _deactivate_game_buttons(self):
+        self.get_object('attack_button').set_object_style('big_inactive')
+        self.get_object('special_button').set_object_style('big_inactive')
+        self.get_object('block_button').set_object_style('big_inactive')
+
+    def _activate_game_buttons(self):
+        self.get_object('attack_button').set_object_style('big')
+        self.get_object('special_button').set_object_style('big')
+        self.get_object('block_button').set_object_style('big')
+
+    def draw_winner(self, winner: int):
+        self._winner = winner
+        self.set_menu_state('finish')
 
     def change_pokemon_handle(self, pokemon: GamePokemon, player: int):
         pokemon_list = self.get_given_player_poke_list(player)
@@ -469,6 +529,9 @@ class PokemonGame:
             raise PokemonDataDoesNotExistError(
                 'Given pokemon is not in player list'
                 )
+        self._activate_game_buttons()
+        for elem in self.get_object('game_pokemon_list').get_elem_list():
+            elem.reset_event()
         if player == 1:
             self.get_exact_object(
                 'game', 'player_one', 'player_one_frame').set_active_pokemon(
@@ -487,6 +550,8 @@ class PokemonGame:
                 'game', 'player_two', 'player_two_frame').set_active_pokemon(
                     self.get_given_player_active_pokemon(2)
                 )
+        self.update_turn(player)
+
 
 def main():
     run = True
@@ -600,6 +665,92 @@ def main():
                     game.set_menu_state('main_menu')
                     game.set_game_state('main_menu')
 
+            elif m_state == 'start_game':
+                if game.raised_event('start'):
+                    game.game_init_finish()
+
+        elif g_state == 'game':
+            if m_state == 'player_one':
+                for special_elem in game.get_object(
+                        'special_list').get_elem_list():
+                    if special_elem.raise_event():
+                        game.special_pokemon_handle(1)
+                for pokemon_elem in game.get_object(
+                        'game_pokemon_list').get_elem_list():
+                    if pokemon_elem.raise_event():
+                        game.change_pokemon_handle(
+                            pokemon_elem.get_elem_object(), 1)
+                if game.raised_event('attack_button'):
+                    game.attack_pokemon_handle(1)
+                elif game.raised_event('special_button'):
+                    game.get_object('special_list').set_elem_list(
+                        game.get_given_player_active_pokemon(1)
+                    )
+                    game.get_object('game_pokemon_list').set_is_visible(False)
+                    game.get_object('special_list').set_is_visible(
+                        not game.get_object('special_list').get_is_visible()
+                    )
+                elif game.raised_event('block_button'):
+                    game.block_pokemon_handle(1)
+                elif game.raised_event('change_pokemon_button'):
+                    game.get_object('game_pokemon_list').set_elem_list(
+                        game.get_given_player_poke_list(1)
+                    )
+                    game.get_object('special_list').set_is_visible(False)
+                    game.get_object('game_pokemon_list').set_is_visible(
+                        not game.get_object(
+                            'game_pokemon_list').get_is_visible()
+                    )
+
+            elif m_state == 'player_two':
+                for pokemon_elem in game.get_object(
+                        'game_pokemon_list').get_elem_list():
+                    if pokemon_elem.raise_event():
+                        game.change_pokemon_handle(
+                            pokemon_elem.get_elem_object(), 2)
+                for special_elem in game.get_object(
+                        'special_list').get_elem_list():
+                    if special_elem.raise_event():
+                        game.special_pokemon_handle(2)
+                if game.raised_event('attack_button'):
+                    game.attack_pokemon_handle(2)
+                elif game.raised_event('special_button'):
+                    game.get_object('special_list').set_elem_list(
+                        game.get_given_player_active_pokemon(2)
+                    )
+                    game.get_object('game_pokemon_list').set_is_visible(False)
+                    game.get_object('special_list').set_is_visible(
+                        not game.get_object('special_list').get_is_visible()
+                    )
+                elif game.raised_event('block_button'):
+                    game.block_pokemon_handle(2)
+
+                elif game.raised_event('change_pokemon_button'):
+                    game.get_object('game_pokemon_list').set_elem_list(
+                        game.get_given_player_poke_list(2)
+                    )
+                    game.get_object('special_list').set_is_visible(False)
+                    game.get_object('game_pokemon_list').set_is_visible(
+                        not game.get_object(
+                            'game_pokemon_list').get_is_visible()
+                    )
+
+            elif m_state == 'pause':
+                if game.raised_event('continue_button'):
+                    game.pause_resume()
+                elif game.raised_event('main_menu_button'):
+                    game.game_reset()
+                    game.set_game_state('main_menu')
+                    game.set_menu_state('main_menu')
+                elif game.raised_event('quit_button'):
+                    run = False
+
+            elif m_state == 'finish':
+                if game.raised_event('continue_button'):
+                    game.game_reset()
+                    game.set_game_state('main_menu')
+                    game.set_menu_state('main_menu')
+
         # Game draw static objects
 
         g_state = game.get_game_state()
@@ -611,7 +762,6 @@ def main():
             if m_state == 'main_menu':
                 screen.draw_clear_text((399, 150), "Pokemon game",
                                        font="BIG_FONT")
-                pass
             elif m_state == 'credits_menu':
                 text_credits = text_database.get_text('credits')
                 screen.draw_multiline_text(
@@ -632,6 +782,26 @@ def main():
                 )
             elif m_state == 'start_game':
                 pass
+        elif g_state == 'game':
+            if m_state == 'player_one':
+                pygame.draw.line(screen._get_screen(), (255, 255, 255),
+                                (0, 400), (800, 400), 3)
+                screen.draw_clear_text((400, 500), "P1")
+            elif m_state == 'player_two':
+                pygame.draw.line(screen._get_screen(), (255, 255, 255),
+                                (0, 400), (800, 400), 3)
+                screen.draw_clear_text((400, 500), "P2")
+            elif m_state == 'pause':
+                screen.draw_clear_text((399, 180), "Pause",
+                                    font="BIG_FONT")
+            elif m_state == 'finish':
+                winner_val = game.get_winner()
+                winnet_text = 'Winner: Player {}'.format(
+                    winner_val if not isinstance
+                    (winner_val, type(None)) else 'Unknown')
+
+                screen.draw_clear_text((400, 200), winnet_text,
+                                    'BIG_FONT')
 
         screen.draw_objects(objects)
         screen.update_display()
@@ -643,7 +813,11 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     if g_state == 'game':
                         if m_state == 'player_one':
-                            pass
+                            game.set_menu_state('pause')
+                        elif m_state == 'player_two':
+                            game.set_menu_state('pause')
+                        elif m_state == 'pause':
+                            game.pause_resume()
     pygame.quit()
 
 

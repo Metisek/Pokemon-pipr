@@ -170,6 +170,9 @@ class AbstractWidget:
         """
         return self._raise_event
 
+    def reset_event(self):
+        self._raise_event = False
+
 
 class AbstractFrame(AbstractWidget):
     """Abstract frame object containing drawable rectangle with frame
@@ -214,6 +217,12 @@ class AbstractFrame(AbstractWidget):
                 'bg_inactive': COLORS.get('BLUEISH_BLACK'),
                 'bg_active': COLORS.get('DARK_BLUE')
             },
+            'big_inactive': {
+                'frame_inactive': COLORS.get('DARK_GRAY'),
+                'frame_active': COLORS.get('DARK_GRAY'),
+                'bg_inactive': COLORS.get('INPURE_BLACK'),
+                'bg_active': COLORS.get('INPURE_BLACK')
+            },
             'no_frame': {
                 'frame_inactive': COLORS.get('BLUEISH_BLACK'),
                 'frame_active': COLORS.get('DARK_BLUE'),
@@ -229,10 +238,12 @@ class AbstractFrame(AbstractWidget):
                 'font_color': COLORS.get('DARK_GRAY')
             },
         }
+
         self._fonts_dict = {
             'normal': FONTS.get('GUI_FONT'),
             'inactive': FONTS.get('GUI_FONT'),
             'big': FONTS.get('MEDIUM_FONT'),
+            'big_inactive': FONTS.get('MEDIUM_FONT'),
             'no_frame': FONTS.get('GUI_FONT'),
             'no_frame_inactive': FONTS.get('GUI_FONT'),
         }
@@ -506,7 +517,8 @@ class Button(AbstractFrame):
         """
         self._dynamic_elevation = 2
         self._raise_event = False
-        if self.get_object_style() == 'inactive':
+        if self.get_object_style() == 'inactive' or self.get_object_style(
+                ) == 'big_inactive':
             self.set_inactive_button_colors()
         else:
             mouse_pos = pygame.mouse.get_pos()
@@ -858,9 +870,6 @@ class SpecialListElem(AbstractFrame):
 
         self._ability = ability
         self._is_pressed = False
-
-    def reset_event(self):
-        self._raise_event = False
 
     def set_ability_text(self, ability: str) -> None:
         self._ability = ability
