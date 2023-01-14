@@ -374,7 +374,17 @@ class PyGameObjectsDatabase:
                     'special_list': SpecialList((250, 120))
                 },
                 'pause': {
-
+                    'continue_button': Button(
+                        'Continue', (200, 40), (300, 270)),
+                    'main_menu_button': Button(
+                        'Main menu', (200, 40), (300, 350)),
+                    'quit_button': Button(
+                        'Quit', (200, 40), (300, 430))
+                },
+                'finish': {
+                    'continue_button': Button(
+                        'CONTINUE', (200, 50), (300, 470)
+                        ),
                 }
             }
         }
