@@ -690,8 +690,12 @@ class PokemonListElem(AbstractFrame):
         self._frame_rect = pygame.Rect((x, y), self.get_size())
         self._bg_rect = pygame.Rect((x, y), self.get_size())
 
-        self._set_elem_texts(index)
+        if self.get_elem_object().get_is_alive() == False:
+            self.set_object_style('no_frame_inactive')
+        else:
+            self.set_object_style('no_frame')
 
+        self._set_elem_texts(index)
         self.check_click()
 
         return ((self._bg_color, self._bg_rect,
@@ -764,7 +768,8 @@ class PokemonList(AbstractFrame):
     def set_elem_list(self, pokemon_list: list[GamePokemon]) -> None:
         elem_list = []
         for elem in pokemon_list:
-            elem_list.append(PokemonListElem(elem, self.get_pos()))
+            elem_list.append(PokemonListElem(
+                elem, (390, 60), self.get_pos()))
         self._elem_list = elem_list
 
     def remove_selected_object(self, selected: PokemonListElem) -> None:
@@ -1036,7 +1041,8 @@ class GamePokemonList(PokemonList):
                 tuple[int, int, int], pygame.Rect,
                 tuple[int, int, int], pygame.Rect],
                 tuple[pygame.surface.Surface, pygame.Rect]]]]:
-        if self.get_is_visible():
+
+        if self.get_is_visible() is True:
             return super().get_draw_values()
         else:
             return ()

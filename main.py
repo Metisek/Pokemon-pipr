@@ -18,7 +18,6 @@ from attributes import (
 )
 # from classes import (
 #     MalformedPokemonDataError,
-#     PokemonDataDoesNotExistError,
 #     DataDoesNotExistError,
 #     BadConversionError,
 #     InvalidDataTypeError,
@@ -26,7 +25,8 @@ from attributes import (
 # )
 
 from classes import (
-    RedundantKeyError
+    RedundantKeyError,
+    PokemonDataDoesNotExistError
 )
 
 from tk_objects import TkPokemonSelectWindow
@@ -119,7 +119,10 @@ class Screen:
 
     def _draw_game_pokemon_list(self, list_object: GamePokemonList) -> None:
         if list_object.get_is_visible():
-            self._draw_list()
+            self._draw_list(list_object)
+        else:
+            for elem in list_object.get_elem_list():
+                elem._raise_event = False
 
     def _draw_special_list(self, list_object: SpecialList) -> None:
         draw_val = list_object.get_draw_values()
@@ -428,6 +431,8 @@ class PokemonGame:
         else:
             self.set_player_turn(1)
             self.set_menu_state('player_one')
+        self.get_object('game_pokemon_list').set_is_visible(False)
+        self.get_object('special_list').set_is_visible(False)
 
     # MAIN GAME FUNCTIONS:
     def attack_pokemon_handle(self, player: int):
@@ -441,11 +446,7 @@ class PokemonGame:
         attacking_pokemon.attack_basic(defending_pokemon)
 
     def block_pokemon_handle(self, player: int):
-        if player == 1:
-            pokemon = self.get_given_player_active_pokemon(1)
-        else:
-            pokemon = self.get_given_player_active_pokemon(2)
-
+        pokemon = self.get_given_player_active_pokemon(player)
         pokemon.increase_defense()
 
     def special_pokemon_handle(self, player: int):
@@ -457,6 +458,35 @@ class PokemonGame:
             defending_pokemon = self.get_given_player_active_pokemon(1)
 
         attacking_pokemon.attack_special(defending_pokemon)
+
+    def change_pokemon_handle(self, pokemon: GamePokemon, player: int):
+        pokemon_list = self.get_given_player_poke_list(player)
+        for idx, pok in enumerate(pokemon_list):
+            if pok == pokemon:
+                self.set_given_player_active_pokemon(idx, player)
+                break
+        else:
+            raise PokemonDataDoesNotExistError(
+                'Given pokemon is not in player list'
+                )
+        if player == 1:
+            self.get_exact_object(
+                'game', 'player_one', 'player_one_frame').set_active_pokemon(
+                    self.get_given_player_active_pokemon(1)
+                )
+            self.get_exact_object(
+                'game', 'player_two', 'player_one_frame').set_active_pokemon(
+                    self.get_given_player_active_pokemon(1)
+                )
+        else:
+            self.get_exact_object(
+                'game', 'player_one', 'player_two_frame').set_active_pokemon(
+                    self.get_given_player_active_pokemon(2)
+                )
+            self.get_exact_object(
+                'game', 'player_two', 'player_two_frame').set_active_pokemon(
+                    self.get_given_player_active_pokemon(2)
+                )
 
 def main():
     run = True
