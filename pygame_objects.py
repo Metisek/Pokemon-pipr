@@ -529,14 +529,12 @@ class Button(AbstractFrame):
 
 
 class PokemonListElem(AbstractFrame):
-    def __init__(self, object: GamePokemon,
+    def __init__(self, object: GamePokemon, size: tuple[float, float],
                  pos: tuple[float, float], object_style='no_frame') -> None:
 
-        size_x = 390
-        size_y = 60
         x, y = pos
 
-        super().__init__((size_x, size_y), (x + 5, y + 5), object_style)
+        super().__init__(size, (x + 5, y + 5), object_style)
 
         # Init checks
         if not isinstance(object, GamePokemon):
@@ -736,13 +734,10 @@ class PokemonListElem(AbstractFrame):
 
 
 class PokemonList(AbstractFrame):
-    def __init__(self, pos: tuple[float, float],
+    def __init__(self, size: tuple[float, float], pos: tuple[float, float],
                  object_style='normal') -> None:
 
-        size_x = 400
-        size_y = 370
-
-        super().__init__((size_x, size_y), pos, object_style)
+        super().__init__(size, pos, object_style)
 
         self._bg_color = self.get_color('bg_inactive')
         self._frame_color = self.get_color('frame_inactive')
@@ -757,12 +752,11 @@ class PokemonList(AbstractFrame):
         return self._elem_list
 
     # Setters
-
     def add_elem_to_list(self, object: GamePokemon) -> None:
         if not isinstance(object, GamePokemon):
             raise InvalidDataTypeError('Given object is invalid')
         self._elem_list.append(
-            PokemonListElem(object, self.get_pos()))
+            PokemonListElem(object, (390, 60), self.get_pos()))
 
     def clear_objects(self):
         self._elem_list = []
@@ -839,6 +833,213 @@ class PokemonList(AbstractFrame):
         return ((self._bg_color, self._bg_rect,
                 self._frame_color, self._frame_rect),
                 tuple(draw_elements))
+
+
+class SpecialListElem(AbstractFrame):
+    def __init__(self, pos: tuple[float, float], ability: str,
+                 object_style='no_frame') -> None:
+
+        x, y = pos
+        size_x = 145
+        size_y = 70
+
+        super().__init__((size_x, size_y), (x + 5, y + 5), object_style)
+
+        self._bg_color = self.get_color('bg_inactive')
+        self._frame_color = self.get_color('frame_inactive')
+        self._font = FONTS.get('SMALL_FONT')
+
+        # Core attributes
+
+        self._ability = ability
+        self._is_pressed = False
+
+    def reset_event(self):
+        self._raise_event = False
+
+    def set_ability_text(self, ability: str) -> None:
+        self._ability = ability
+
+    def get_ability_text(self) -> str:
+        return self._ability
+
+    def _get_elem_texts(self, index) -> None:
+        """Gets every single text with variables and sets tuple
+        of Surface and Rect: tuple[
+            pygame.surface.Surface, pygame.rect.Rect]
+        """
+        # Init variables
+        if not self.get_ability_text():
+            return ()
+        main_color = self.get_color('font_color')
+        main_font = FONTS.get('SMALL_FONT')
+        x, y = self.get_pos()
+        ability_text = self.get_ability_text()
+        ability_surf = main_font.render(
+            ability_text, True, main_color)
+        ability_rect = ability_surf.get_rect(
+            center=(x + 72 + index % 2 * 145, y + 35 + index // 2 * 70))
+        return [ability_surf, ability_rect]
+
+    def set_active_frame_colors(self) -> None:
+        """Changes given object colors to its 'active' values
+        """
+        self._set_bg_color(self.get_color('bg_active'))
+        self._set_frame_color(self.get_color('frame_active'))
+
+    def set_inactive_frame_colors(self) -> None:
+        """Changes given object colors to its 'inactive' values
+        """
+        self._set_bg_color(self.get_color('bg_inactive'))
+        self._set_frame_color(self.get_color('frame_inactive'))
+
+    def get_draw_values(self, index=0):
+        x, y = self.get_pos()
+        x = x + index % 2 * 145
+        y = y + index // 2 * 70
+        self._frame_rect = pygame.Rect((x, y), self.get_size())
+        self._bg_rect = pygame.Rect((x, y), self.get_size())
+        text_elem = self._get_elem_texts(index)
+
+        self.check_click()
+
+        return ((self._bg_color, self._bg_rect,
+                self._frame_color, self._frame_rect),
+                text_elem)
+
+    def check_click(self):
+        """Function checks if mouse is over button, if it's clicked, and if
+        it's raises event for game mainloop
+        """
+        self._raise_event = False
+        mouse_pos = pygame.mouse.get_pos()
+        if self._frame_rect.collidepoint(mouse_pos):
+            self.set_active_frame_colors()
+            if pygame.mouse.get_pressed()[0]:
+                self._is_pressed = True
+            elif self._is_pressed is True:
+                self._raise_event = True
+                self._is_pressed = False
+        else:
+            self._is_pressed = False
+            self.set_inactive_frame_colors()
+
+
+class SpecialList(AbstractFrame):
+    def __init__(self, pos: tuple[float, float],
+                 object_style='normal') -> None:
+        x, y = pos
+        size_x = 300
+        size_y = 150
+
+        super().__init__((size_x, size_y), (x + 5, y + 5), object_style)
+
+        self._bg_color = self.get_color('bg_inactive')
+        self._frame_color = self.get_color('frame_inactive')
+
+        # Core attributes
+
+        self._is_visible = False
+        self._elem_list = []
+
+    def get_is_visible(self):
+        return self._is_visible
+
+    def set_is_visible(self, value):
+        self._is_visible = value
+
+    def get_elem_list(self) -> list[SpecialListElem]:
+        return self._elem_list
+
+    def set_elem_list(self, pokemon: GamePokemon) -> None:
+        elem_list = []
+        for elem in pokemon.get_abilities():
+            elem_list.append(SpecialListElem(self.get_pos(), str(elem)))
+        self._elem_list = elem_list
+
+    def set_list_pos(self, pos: tuple[int, int]) -> None:
+        """Changes button position and automatically moves to it
+
+        Args:
+            pos (tuple[int, int]): Left x Top coordinates for object
+
+        Raises:
+            InvalidDataTypeError: Given values are not iterable
+            InvalidDataLineLeghthError: Given tuple size is not equal 2
+            NotANumberError: Given value is not a number
+            ValueError: Given value is not greater or equal 0
+        """
+        self.change_frame_pos(pos)
+        for elem in self.get_elem_list():
+            elem._set_frame_pos()
+
+    def get_draw_values(self) -> tuple[tuple[
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+            tuple[tuple[tuple[
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+                tuple[pygame.surface.Surface, pygame.Rect]]]]:
+        """Gets every single used value to draw pokemon list
+
+        Returns:
+            tuple[
+                tuple[
+                    tuple[int, int, int], pygame.Rect,
+                    tuple[int, int, int], pygame.Rect
+                    ],
+                tuple[
+                    tuple[
+                        tuple[
+                            tuple[int, int, int], pygame.Rect,
+                            tuple[int, int, int], pygame.Rect
+                            ],
+                        tuple[
+                            tuple[
+                                pygame.surface.Surface, pygame.Rect
+                                ]
+                            ]
+                    ]
+                ]
+            ]: EDIT
+        """
+        for elem in self.get_elem_list():
+            elem._raise_event = False
+        if self.get_is_visible() is False:
+            return ()
+        draw_elements = []
+        for idx, elem in enumerate(self.get_elem_list()):
+            draw_elements.append(elem.get_draw_values(idx))
+
+        return ((self._bg_color, self._bg_rect,
+                self._frame_color, self._frame_rect),
+                tuple(draw_elements))
+
+
+class GamePokemonList(PokemonList):
+    def __init__(self, size: tuple[float, float],
+                 pos: tuple[float, float], object_style='normal') -> None:
+        super().__init__(size, pos, object_style)
+
+        self._is_visible = False
+
+    def get_is_visible(self):
+        return self._is_visible
+
+    def set_is_visible(self, value: bool):
+        self._is_visible = value
+
+    def get_draw_values(self) -> tuple[tuple[
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+            tuple[tuple[tuple[
+                tuple[int, int, int], pygame.Rect,
+                tuple[int, int, int], pygame.Rect],
+                tuple[pygame.surface.Surface, pygame.Rect]]]]:
+        if self.get_is_visible():
+            return super().get_draw_values()
+        else:
+            return ()
 
 
 class PokemonBalls(AbstractWidget):

@@ -8,7 +8,14 @@ from classes import (
     NotANumberError,
     RedundantKeyError
 )
-from pygame_objects import Button, PokemonList, PokemonBalls, PokemonFrame
+from pygame_objects import (
+    Button,
+    PokemonList,
+    PokemonBalls,
+    PokemonFrame,
+    SpecialList,
+    GamePokemonList
+)
 from model_io import check_if_valid_key
 from copy import copy
 
@@ -276,7 +283,7 @@ class PyGameObjectsDatabase:
                 },
             'game_init': {
                 'player_one_init': {
-                    'pokemon_list': PokemonList((370, 50)),
+                    'pokemon_list': PokemonList((400, 370), (370, 50)),
                     'pokeballs': PokemonBalls((275, 558)),
                     'add_pokemon_button': Button(
                         'ADD', (95, 50), (30, 470)
@@ -298,8 +305,8 @@ class PyGameObjectsDatabase:
                     )
                 },
                 'player_two_init': {
-                    'pokemon_list': None,
-                    'pokeballs': None,
+                    'pokemon_list': PokemonList((400, 370), (370, 50)),
+                    'pokeballs': PokemonBalls((275, 558)),
                     'add_pokemon_button': Button(
                         'ADD', (95, 50), (30, 470)
                         ),
@@ -327,6 +334,26 @@ class PyGameObjectsDatabase:
             },
             'game': {
                 'player_one': {
+                    'player_one_frame': PokemonFrame((60, 207)),
+                    'player_two_frame': PokemonFrame((60, 23)),
+                    'attack_button': Button(
+                        'Attack', (300, 65), (50, 430), 'big'
+                        ),
+                    'special_button': Button(
+                        'Special', (300, 65), (450, 430), 'big'
+                        ),
+                    'block_button': Button(
+                        'Block', (300, 65), (50, 510), 'big'
+                        ),
+                    'change_pokemon_button':  Button(
+                        'Change pokemon', (300, 65), (450, 510), 'big'
+                        ),
+                    'game_pokemon_list': GamePokemonList(
+                        (400, 370), (370, 50)
+                        ),
+                    'special_list': SpecialList((250, 120))
+                },
+                'player_two': {
                     'player_one_frame': PokemonFrame((60, 23)),
                     'player_two_frame': PokemonFrame((60, 207)),
                     'attack_button': Button(
@@ -341,22 +368,10 @@ class PyGameObjectsDatabase:
                     'change_pokemon_button':  Button(
                         'Change pokemon', (300, 65), (450, 510), 'big'
                         ),
-                },
-                'player_two': {
-                    'player_one_frame': PokemonFrame((60, 207)),
-                    'player_two_frame': PokemonFrame((60, 23)),
-                    'attack_button': Button(
-                        'Attack', (300, 65), (50, 410), 'big'
+                    'game_pokemon_list': GamePokemonList(
+                        (400, 370), (370, 50)
                         ),
-                    'special_button': Button(
-                        'Special', (300, 65), (450, 410), 'big'
-                        ),
-                    'block_button': Button(
-                        'Block', (300, 65), (50, 510), 'big'
-                        ),
-                    'change_pokemon_button':  Button(
-                        'Change pokemon', (300, 65), (450, 510), 'big'
-                        ),
+                    'special_list': SpecialList((250, 120))
                 },
                 'pause': {
 
