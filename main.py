@@ -1,5 +1,11 @@
 import pygame
-from pygame_objects import Button, PokemonList, PokemonListElem, PokemonBalls
+from pygame_objects import (
+    Button,
+    PokemonList,
+    PokemonListElem,
+    PokemonBalls,
+    PokemonFrame
+)
 from attributes import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -68,6 +74,8 @@ class Screen:
                 self._draw_list(object)
             elif isinstance(object, PokemonBalls):
                 pass
+            elif isinstance(object, PokemonFrame):
+                self._draw_game_frame(object)
 
     def draw_clear_text(
             self, pos, text,
@@ -120,6 +128,15 @@ class Screen:
             for texts in elem[1]:
                 screen.blit(texts[0], texts[1])
 
+    def _draw_game_frame(self, frame_object: PokemonFrame):
+        screen = self._get_screen()
+        draw_val = frame_object.get_draw_values()
+        image = draw_val[0]
+        texts = draw_val[1]
+        screen.blit(image[0], image[1])
+        for text in texts:
+            screen.blit(text[0], text[1])
+
     def _draw_button(self, button_object: Button) -> None:
         screen = self._get_screen()
         draw_val = button_object.get_draw_values()
@@ -148,6 +165,7 @@ class PokemonGame:
         self._selected_pokemon = None
         self._selected_frame = None
         self._objects_database = PyGameObjectsDatabase()
+        self._player_turn = None
 
     def game_init_handle(self, object_type: str | None, player: int) -> None:
         pokemon_number = self.get_given_player_pokemon_number(player)
@@ -195,6 +213,23 @@ class PokemonGame:
             game_list.add_elem_to_list(add_pok)
             self.game_init_handle('add_pokemon_button', player)
 
+    def draw_starting_turn(self) -> None:
+        player_one_starting_pokemon_spd = self.get_given_player_pokemon_list(
+            1)[0].get_speed()
+        player_two_starting_pokemon_spd = self.get_given_player_pokemon_list(
+            2)[0].get_speed()
+        if player_one_starting_pokemon_spd >= player_two_starting_pokemon_spd:
+            self.set_player_turn(1)
+        else:
+            self.set_player_turn(2)
+
+
+    def get_player_turn(self) -> int:
+        return self._player_turn
+
+    def set_player_turn(self, active_player: int) -> None:
+        self._player_turn = active_player
+
     def game_init_reset(self) -> None:
         self._selected_pokemon = None
         self._selected_frame = None
@@ -233,7 +268,8 @@ class PokemonGame:
         else:
             return self._player_two_pokemons
 
-    def _set_given_player_pokemon_list(self, value, player: int):
+    def _set_given_player_pokemon_list(
+            self, value: list[GamePokemon], player: int):
         if player == 1:
             self._player_one_pokemons = value
         else:
@@ -322,7 +358,7 @@ class PokemonGame:
     def set_menu_state(self, menu_state):
         self._menu_state = menu_state
 
-    def set_player_count(self, players: int) -> None:
+    def set_real_players_count(self, players: int) -> None:
         self._player_count = players
 
 
@@ -356,12 +392,12 @@ def main():
                 if game.raised_event('1_player_button'):
                     game.set_game_state('game_init')
                     game.set_menu_state('player_one_init')
-                    game.set_player_count(1)
+                    game.set_real_players_count(1)
                     game.game_init_handle(None, 1)
                 elif game.raised_event('2_player_button'):
                     game.set_game_state('game_init')
                     game.set_menu_state('player_one_init')
-                    game.set_player_count(2)
+                    game.set_real_players_count(2)
                     game.game_init_handle(None, 1)
                 elif game.raised_event('back_button'):
                     game.set_menu_state('main_menu')
@@ -477,6 +513,11 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    if g_state == 'game':
+                        if m_state == 'player_one':
+                            pass
     pygame.quit()
 
 

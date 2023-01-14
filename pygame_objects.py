@@ -870,12 +870,80 @@ class PokemonBalls(AbstractWidget):
         return tuple(text_list)
 
 
-
-
 class PokemonFrame(AbstractWidget):
-    def __init__(self, pokemon: GamePokemon, pos: tuple[float, float]) -> None:
+    def __init__(self, pos: tuple[float, float]) -> None:
 
-        super().__init__((680, 144), pos)
+        super().__init__((680, 174), pos)
 
         self._frame_img = FRAME_IMAGE
-        pass
+        self._active_pokemon = None
+
+    def get_active_pokemon(self) -> GamePokemon:
+        return self._active_pokemon
+
+    def set_active_pokemon(self, pokemon: GamePokemon) -> None:
+        if not isinstance(pokemon, GamePokemon):
+            raise InvalidDataTypeError('Given value is not a GamePokemon')
+        self._active_pokemon = pokemon
+
+    def _get_draw_texts(self) -> tuple[
+            tuple[int, int, int], pygame.surface.Surface
+            ] | tuple[None]:
+        if not self.get_active_pokemon():
+            return ()
+        pokemon = self.get_active_pokemon()
+        main_color = COLORS.get('LIGHT_GRAY')
+        small_font = FONTS.get('SMALL_FONT')
+        medium_font = FONTS.get('MEDIUM_FONT')
+        big_font = FONTS.get('BIG_FONT')
+        x, y = self.get_pos()
+        text_list = []
+
+        name_text = str(pokemon.get_name())
+        name_surf = big_font.render(
+            name_text, True, main_color)
+        name_rect = name_surf.get_rect(
+            topleft=(x + 40, y + 24))
+        text_list.append((name_surf, name_rect))
+
+        hp_text = 'HP: {}/{}'.format(
+            str(pokemon.get_hp()), str(pokemon.get_max_hp())
+        )
+        hp_surf = medium_font.render(
+            hp_text, True, main_color)
+        hp_rect = hp_surf.get_rect(
+            bottomright=(x + 645, y + 108))
+        text_list.append((hp_surf, hp_rect))
+
+        stats_text = 'ATT: {}   DEF: {}   SPD: {}'.format(
+            str(pokemon.get_attack()),
+            str(pokemon.get_defense()),
+            str(pokemon.get_speed())
+        )
+        stats_surf = small_font.render(
+            stats_text, True, main_color)
+        stats_rect = stats_surf.get_rect(
+            bottomleft=(x + 40, y + 146))
+        text_list.append((stats_surf, stats_rect))
+
+        types = pokemon.get_types()
+        type_1 = str(types[0]).title()
+        type_2 = str(types[1]).title() if types[1] else None
+        types_text = str('{}, {}'.format(type_1, type_2) if type_2
+                         else '{}'.format(type_1))
+        types_surf = small_font.render(
+            types_text, True, main_color)
+        types_rect = types_surf.get_rect(
+            topleft=(x + 40, y + 80))
+        text_list.append((types_surf, types_rect))
+
+        return tuple(text_list)
+
+    def get_draw_values(self) -> tuple[tuple[
+                    pygame.surface.Surface, tuple[int, int]],
+                tuple[
+                    tuple[int, int, int], pygame.surface.Surface]
+                ]:
+        frame_img = self._frame_img
+        texts = self._get_draw_texts()
+        return ((frame_img, self.get_pos()), texts)
