@@ -82,7 +82,7 @@ class BasePokemon:
                  abilities: (list[str] | tuple[str]),
                  stats: dict,
                  special_strength: dict,
-                 other: dict):
+                 other: dict) -> None:
         """ Creates base pokemon object.
 
         Args:
