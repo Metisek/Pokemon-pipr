@@ -486,7 +486,7 @@ class GamePokemon(BasePokemon):
         self._is_alive = True
         self._stab = None
         self._in_arena = False
-        self._defense_iter = 0
+        self._defense_iter = 1
 
         if randomize:
             if not isinstance(
@@ -758,11 +758,7 @@ class GamePokemon(BasePokemon):
             NotANumberError: Value cannot be converted to int
         """
         try:
-            value = self._return_if_positive(self._convert_to_int(value))
-        except BadConversionError:
-            raise BadConversionError(
-                'Float cannot be mapped (rounded) to int in this object'
-                )
+            value = self._return_if_not_negative(self._convert_to_float(value))
         except NotANumberError:
             raise NotANumberError('Value cannot be converted to int')
         self._defense_iter = value
