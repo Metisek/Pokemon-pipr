@@ -21,14 +21,11 @@ from random import randint, choice
 from classes import (
     RedundantKeyError,
     PokemonDataDoesNotExistError,
-    InvalidDataTypeError,
     InvalidObjectTypeError,
-    InvalidDataLineLeghthError,
-    BadConversionError,
 
 )
 
-from model_io import check_if_valid_key, io_return_if_valid_string
+from model_io import check_if_valid_key
 from tk_objects import TkPokemonSelectWindow
 from database import PyGameObjectsDatabase, TextDatabase
 from classes import BasePokemon, GamePokemon
@@ -216,7 +213,7 @@ class Screen:
 
     def draw_clear_text(
             self,
-            pos: tuple(float, float),
+            pos: tuple[float, float],
             text: str,
             font: Literal['GUI_FONT', 'BIG_FONT', 'MEDIUM_FONT',
                           'SMALL_FONT', 'SMALLER_FONT'] = 'MEDIUM_FONT',
@@ -311,7 +308,6 @@ class Screen:
             pygame.display: Active display
         """
         return self._screen
-
 
 
 class PokemonGame:
@@ -513,31 +509,57 @@ class PokemonGame:
         pokemon_list = self.get_given_player_poke_list(player)
         for idx, pok in enumerate(pokemon_list):
             if pok == pokemon:
-                self.set_given_player_active_pokemon(idx, player)
+                if pok != self.get_given_player_active_pokemon(player):
+                    self.set_given_player_active_pokemon(idx, player)
+                    self._activate_game_buttons()
+                    for elem in self.get_object(
+                            'game_pokemon_list').get_elem_list():
+                        elem.reset_event()
+                    self.change_given_player_frame(player)
                 break
         else:
             raise PokemonDataDoesNotExistError(
                 'Given pokemon is not in player list'
                 )
-        self._activate_game_buttons()
-        for elem in self.get_object('game_pokemon_list').get_elem_list():
-            elem.reset_event()
-        self.change_given_player_frame(player)
 
     def update_turn(self, player: int) -> None:
+        """ Update's turn insie game using currently playing player number.
+
+        Args:
+            player (int): Active player number.
+        """
         if player == 1:
             self.set_player_turn(2)
             self.set_menu_state('player_two')
         else:
             self.set_player_turn(1)
             self.set_menu_state('player_one')
+
         self.get_object('game_pokemon_list').set_is_visible(False)
         self.get_object('special_list').set_is_visible(False)
+
+    def draw_winner(self, winner: int):
+        """Sets winner of the game and updates manu state to finish.
+
+        Args:
+            winner (int): Which player won the game.
+        """
+        self._winner = winner
+        self.set_menu_state('finish')
 
     # PRIVATE MAIN FUNCTIONS
 
     def _get_pokemons_and_enemy(self, player) -> tuple[
             int, GamePokemon, GamePokemon]:
+        """Gets value of enemy number, player's and enemy's GamePokemon.
+
+        Args:
+            player (_type_): Currently active player's number.
+
+        Returns:
+            tuple[int, GamePokemon, GamePokemon]: List with enemy's number,
+            player's GamePokemon and enemy's GamePokemon (in order).
+        """
         if player == 1:
             enemy = 2
         else:
@@ -547,6 +569,14 @@ class PokemonGame:
         return (enemy, p_pokemon, e_pokemon)
 
     def _dead_pokemon_handle(self, player: int, enemy: int):
+        """ Handle when attack on enemy's pokemon is fatal.
+            Function draw winners if none of enemy's pokemon is alive.
+            Else it forces to change active pokemon.
+
+        Args:
+            player (int): player's number
+            enemy (int): enemy's number
+        """
         self.get_object('game_pokemon_list').set_elem_list(
                     self.get_given_player_poke_list(enemy)
                 )
@@ -559,6 +589,8 @@ class PokemonGame:
             self.get_object('game_pokemon_list').set_is_visible(True)
 
     def _draw_starting_turn(self) -> None:
+        """Draws who will start game based on players first pokemon speed.
+        """
         player_one_starting_pokemon_spd = self.get_given_player_poke_list(
             1)[0].get_speed()
         player_two_starting_pokemon_spd = self.get_given_player_poke_list(
@@ -570,9 +602,28 @@ class PokemonGame:
             self.set_player_turn(2)
             self.set_menu_state('player_two')
 
+    def _deactivate_game_buttons(self):
+        """Deactivates all important game buttons if pokemon is dead.
+        """
+        self.get_object('attack_button').set_object_style('big_inactive')
+        self.get_object('special_button').set_object_style('big_inactive')
+        self.get_object('block_button').set_object_style('big_inactive')
+
+    def _activate_game_buttons(self):
+        """Activates back all of active player's buttons.
+        """
+        self.get_object('attack_button').set_object_style('big')
+        self.get_object('special_button').set_object_style('big')
+        self.get_object('block_button').set_object_style('big')
+
     # Bot functions
 
-    def bot_init(self, database: list[BasePokemon]):
+    def bot_init(self, database: list[BasePokemon]) -> None:
+        """Initialises bot with as many random pokemons as player has.
+
+        Args:
+            database (list[BasePokemon]): List of all BasePokemon objects.
+        """
         self._set_given_player_pokemon_number(
             self.get_given_player_pokemon_number(1), 2
         )
@@ -582,6 +633,10 @@ class PokemonGame:
         self._set_given_player_pokemon_list(pokemon_list, 2)
 
     def bot_move(self):
+        """Calculates which move should bot use or forces change if
+           currently active pokemon is dead. Changing pokemons
+           if active pokemon is alive is prohibited.
+        """
         bot_pokemon = self.get_given_player_active_pokemon(2)
         if bot_pokemon.get_is_alive() is False:
             self.remove_pokemon_from_player(bot_pokemon, 2)
@@ -606,6 +661,8 @@ class PokemonGame:
     # Game reset functions
 
     def game_init_reset(self) -> None:
+        """Resets all init variables and objects.
+        """
         self.set_real_players_count(None)
         self._selected_pokemon = None
         self._selected_frame = None
@@ -625,14 +682,23 @@ class PokemonGame:
             'remove_pokemon_button').set_object_style('inactive')
 
     def game_reset(self):
+        """Reset all both game and init variables in game
+        """
         self.set_given_player_active_pokemon(None, 1)
         self.set_given_player_active_pokemon(None, 2)
         self._winner = None
+        self._player_turn = None
         self.game_init_reset()
 
     # Other game handling functions
 
     def change_given_player_frame(self, player: int) -> None:
+        """ Updates both menus given player's frame after
+        active pokemon change.
+
+        Args:
+            player (int): Player's number
+        """
         if player == 1:
             self.get_exact_object(
                 'game', 'player_one', 'player_one_frame').set_active_pokemon(
@@ -654,12 +720,20 @@ class PokemonGame:
         self.update_turn(player)
 
     def pause_resume(self):
+        """ Unpauses game using to saved player's turn.
+        """
         if self.get_player_turn() == 1:
             self.set_menu_state('player_one')
         else:
             self.set_menu_state('player_two')
 
     def list_select_item(self, list_elem: PokemonListElem) -> None:
+        """Handles if given PokemonListElem object is selected.
+        Function depends on saved event type.
+
+        Args:
+            list_elem (PokemonListElem): Object that raised event.
+        """
         if list_elem.get_event_type() == 'Select':
             for elem_check in self.get_list_elems(
                     'pokemon_list'):
@@ -679,12 +753,25 @@ class PokemonGame:
             self.set_selected_pokemon(None)
             self.set_selected_frame(None)
 
-    def add_pokemon_to_player(self, pokemon: GamePokemon, player):
+    def add_pokemon_to_player(self, pokemon: GamePokemon, player: int):
+        """Adds GamePokemon to given player's pokemon list.
+
+        Args:
+            pokemon (GamePokemon): GamePokemon to add to list
+            player (int): Plyer's number
+        """
         pokemons = self.get_given_player_poke_list(player)
         pokemons.append(pokemon)
         self._set_given_player_pokemon_list(pokemons, player)
 
     def remove_pokemon_from_player(self, pokemon: GamePokemon, player):
+        """Removes given GamePokemon from given player's pokemon list.
+        Does not delete anything if no match is found.
+
+        Args:
+            pokemon (GamePokemon): GamePokemon to add to list
+            player (int): Player's number
+        """
         pokemons = self.get_given_player_poke_list(player)
         for idx, elem in enumerate(pokemons):
             if elem == pokemon:
@@ -694,41 +781,119 @@ class PokemonGame:
 
     # Getters
 
-    def get_player_turn(self) -> int:
+    def get_player_turn(self) -> (int | None):
+        """Gets private value of current player's turn or None if game
+        was not initialised.
+
+        Returns:
+            int | None: Which player's turn it is or None if game not
+            initalised.
+        """
         return self._player_turn
 
     def get_given_player_active_pokemon(self, player: int) -> GamePokemon:
+        """Gets private value given player's active pokemon.
+
+        Args:
+            player (int): Player's number.
+
+        Returns:
+            GamePokemon: Active GamePokemon object.
+        """
         if player == 1:
             return self._player_one_active_pokemon
         else:
             return self._player_two_active_pokemon
 
-    def get_given_player_poke_list(self, player: int):
+    def get_given_player_poke_list(self, player: int) -> list[GamePokemon]:
+        """Gets private value given player's pokemons.
+
+        Args:
+            player (int): Player's number.
+
+        Returns:
+            list[GamePokemon]: List of GamePokemon objects.
+        """
         if player == 1:
             return self._player_one_pokemons
         else:
             return self._player_two_pokemons
 
-    def get_given_player_pokemon_number(self, player: int):
+    def get_given_player_pokemon_number(self, player: int) -> int:
+        """Gets private value of given player's pokemon number.
+        Value shows how many pokeballs are in player's inventory in game init
+        or shows how many pokemons are alive while in main game.
+
+        Args:
+            player (int): Player's number.
+
+        Returns:
+            list[GamePokemon]: List of GamePokemon objects.
+        """
         if player == 1:
             return self._player_one_pokemon_number
         else:
             return self._player_two_pokemon_number
 
     def get_selected_pokemon(self) -> GamePokemon | None:
+        """ Gets private value of currently selected pokemon.
+
+        Returns:
+            GamePokemon | None: Selected GamePokemon object.
+        """
         return self._selected_pokemon
 
     def get_selected_frame(self) -> PokemonListElem | None:
+        """ Gets private value of currently selected frame.
+
+        Returns:
+            PokemonListElem | None: Selected PokemonListElem object.
+        """
         return self._selected_frame
 
-    def get_real_players_count(self):
+    def get_real_players_count(self) -> int | None:
+        """ Gets how many players are real or None if game wasn't started.
+
+        Returns:
+            int | None: Number of real players.
+        """
         return self._player_count
 
-    def get_list_elems(self, object_key) -> list[PokemonListElem]:
-        object = self.get_active_objects()[object_key]
-        return object.get_elem_list()
+    def get_list_elems(self, object_key: str) -> list[PokemonListElem]:
+        """Gets all elements from PokemonList object.
+        Throws exception if given key is invalid.
 
-    def get_object(self, object_key):
+        Args:
+            object_key (str): Key corrseponding to pokemon list.
+
+        Raises:
+            RedundantKeyError: Given key does not correspond
+            to PokemonList object.
+
+        Returns:
+            list[PokemonListElem]: List of all PokemonListElems in PokemonList.
+        """
+        try:
+            object = self.get_active_objects()[object_key]
+            return object.get_elem_list()
+        except Exception:
+            raise RedundantKeyError(
+                'Given key does not correspond to PokemonList object.'
+            )
+
+    def get_object(self, object_key: str):
+        """Gets given object from active objects in given game and menu state.
+        Throws exception if key is invalid.
+
+        Args:
+            object_key (str): Object key.
+
+        Raises:
+            RedundantKeyError: Given object key is invalid.
+
+        Returns:
+            Any: Any of pygame_classes objects.
+        """
         active_objects = self.get_active_objects()
         try:
             object = active_objects[object_key]
@@ -736,51 +901,82 @@ class PokemonGame:
         except KeyError:
             raise RedundantKeyError('Given object does not exist')
 
-    def get_exact_object(self, game_state, menu_state, object_key):
+    def get_exact_object(self, game_state: str,
+                         menu_state: str, object_key: str):
+        """Gets given object from exact game and menu state arguments.
+        Throws exception if any of given keys is invalid.
+
+        Args:
+            game_state (str): Game state.
+            menu_state (str): Menu state corresponding to given game state.
+            object_key (str): Object key corresponding to given menu state.
+
+        Raises:
+            RedundantKeyError: Given object key is invalid.
+
+        Returns:
+            Any: Any of pygame_classes objects.
+        """
         try:
             return self._objects_database.get_active_objects(
                 game_state, menu_state)[object_key]
         except KeyError:
             raise RedundantKeyError('Given object does not exist')
 
-    def get_active_objects(self):
+    def get_active_objects(self) -> dict:
+        """Gets currently active objects and return dict with them.
+
+        Returns:
+            dict: Dict with all objects in given game and menu state
+        """
         return self._objects_database.get_active_objects(
             self.get_game_state(), self.get_menu_state()
         )
 
-    def get_winner(self):
+    def get_winner(self) -> int | None:
+        """Gets winner of the game or None if it wans't drawn.
+
+        Returns:
+            int | None: Game's winner or none if not present.
+        """
         return self._winner
 
-    def get_game_state(self):
+    def get_game_state(self) -> str:
+        """Gets current game state and returns it as str.
+
+        Returns:
+            str: Current game state.
+        """
         return self._game_state
 
-    def get_menu_state(self):
+    def get_menu_state(self) -> str:
+        """Gets current menu state and returns it as str.
+
+        Returns:
+            str: Current menu state.
+        """
         return self._menu_state
-
-    # Private getters
-
-    def _deactivate_game_buttons(self):
-        self.get_object('attack_button').set_object_style('big_inactive')
-        self.get_object('special_button').set_object_style('big_inactive')
-        self.get_object('block_button').set_object_style('big_inactive')
-
-    def _activate_game_buttons(self):
-        self.get_object('attack_button').set_object_style('big')
-        self.get_object('special_button').set_object_style('big')
-        self.get_object('block_button').set_object_style('big')
-
-    def draw_winner(self, winner: int):
-        self._winner = winner
-        self.set_menu_state('finish')
 
     # Setters
 
     def set_player_turn(self, active_player: int) -> None:
+        """Sets new player's turn.
+
+        Args:
+            active_player (int): New active player.
+        """
         self._player_turn = active_player
 
     def set_given_player_active_pokemon(self,
-                                        list_index: int | None,
+                                        list_index: int,
                                         player: int):
+        """Sets active pokemon of given player using it's saved
+        pokemon list and list_index.
+
+        Args:
+            list_index (int): Index of pokemon in pokemon's list
+            player (int): Player who changes it's active pokemon.
+        """
         if player == 1:
             self._player_one_active_pokemon = self.get_given_player_poke_list(
                 player)[list_index] if not isinstance(
@@ -790,44 +986,86 @@ class PokemonGame:
                 player)[list_index] if not isinstance(
                     list_index, type(None)) else None
 
-    def set_game_state(self, game_state):
+    def set_game_state(self, game_state: str):
+        """Sets current game state to value given in argument.
+
+        Args:
+            game_state (str): New game state.
+        """
         self._game_state = game_state
 
     def set_menu_state(self, menu_state):
+        """Sets current menu state to value given in argument.
+
+        Args:
+            menu_state (str): New menu state.
+        """
         self._menu_state = menu_state
 
     def set_real_players_count(self, players: int) -> None:
+        """Sets how many real players (1 or 2) are in the game.
+
+        Args:
+            players (int): How many real players are in the game
+        """
         self._player_count = players
 
     def set_selected_pokemon(self, pokemon: GamePokemon) -> None:
+        """Sets currently selected pokemon to value given in argument.
+
+        Args:
+            pokemon (GamePokemon): GamePokemon object.
+        """
         self._selected_pokemon = pokemon
 
     def set_selected_frame(self, frame: PokemonListElem) -> None:
+        """Sets currently selected frame to value given in argument.
+
+        Args:
+            frame (GamePokemon): PokemonListElem object.
+        """
         self._selected_frame = frame
 
     # Private setters
 
     def _set_given_player_pokemon_list(
             self, value: list[GamePokemon], player: int):
+        """Sets given player pokemon list to value given in argument.
+
+        Args:
+            value (list[GamePokemon]): List of GamePokemon objects
+            player (int): Player's number.
+        """
         if player == 1:
             self._player_one_pokemons = value
         else:
             self._player_two_pokemons = value
 
-    def _set_given_player_pokemon_number(self, value, player: int):
+    def _set_given_player_pokemon_number(self, value: int, player: int):
+        """Sets given player pokemon number to value given in argument.
+
+        Args:
+            value (int): Number of how many pokemons are in init/alive.
+            player (int): Player's number.
+        """
         if player == 1:
             self._player_one_pokemon_number = value
         else:
             self._player_two_pokemon_number = value
 
+
 # EVENT MAINLOOP
 
 def main():
+
+    # Initialise main functions and objects
+
     run = True
     screen = Screen()
     game = PokemonGame()
     tk_sel_window = TkPokemonSelectWindow()
     text_database = TextDatabase()
+
     while run:
         screen.get_clock().tick(FPS)
 
@@ -1028,6 +1266,7 @@ def main():
                     game.bot_move()
                     if game.get_menu_state() != 'finish':
                         game.set_menu_state('player_one')
+
         # Game draw static objects
 
         g_state = game.get_game_state()
@@ -1082,6 +1321,8 @@ def main():
 
         screen.draw_objects(objects)
         screen.update_display()
+
+        # Button events
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
