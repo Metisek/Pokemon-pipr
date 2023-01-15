@@ -8,6 +8,7 @@ from pygame_objects import (
     SpecialList,
     GamePokemonList
 )
+from typing import Literal
 from attributes import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -19,9 +20,15 @@ from random import randint, choice
 
 from classes import (
     RedundantKeyError,
-    PokemonDataDoesNotExistError
+    PokemonDataDoesNotExistError,
+    InvalidDataTypeError,
+    InvalidObjectTypeError,
+    InvalidDataLineLeghthError,
+    BadConversionError,
+
 )
 
+from model_io import check_if_valid_key, io_return_if_valid_string
 from tk_objects import TkPokemonSelectWindow
 from database import PyGameObjectsDatabase, TextDatabase
 from classes import BasePokemon, GamePokemon
@@ -31,38 +38,36 @@ pygame.init()
 
 
 class Screen:
-    """PyGame screen window class with drawing functions embedded
+    """PyGame screen window class with embedded drawing functions.
     """
     def __init__(self) -> None:
-        """Initialises main screen with basic parameters set in attributes
+        """Initialises main screen with basic parameters set in attributes.
         """
         self._screen = pygame.display.set_mode(
             (SCREEN_WIDTH, SCREEN_HEIGHT), flags=0)
         self._clock = pygame.time.Clock()
         pygame.display.set_caption("Pokemon - Mateusz Bojarski")
 
-    def get_clock(self) -> pygame.time.Clock:
-        """Gets private value of screen's clock (FPS) and returns it
+    # Main functions
 
-        Returns:
-            pygame.time.Clock: Active clock object
+    def draw_bg(self):
+        """ Draws screen background.
         """
-        return self._clock
-
-    def _get_screen(self) -> pygame.display:
-        """Gets private value of screen display object and returns it
-
-        Returns:
-            pygame.display: Acrive display
-        """
-        return self._screen
+        self._get_screen().fill(COLORS.get('BG_COLOR'))
 
     def update_display(self):
         """Updates current pygame display
         """
         pygame.display.update()
 
+    # Objects select
+
     def draw_objects(self, objects_dict: dict[str]) -> None:
+        """Gets every single object type and handles it by it's name.
+
+        Args:
+            objects_dict (dict[str]): Dict with every active PyGame object.
+        """
         objects = objects_dict.values()
         for object in objects:
             if isinstance(object, Button):
@@ -78,40 +83,15 @@ class Screen:
             elif isinstance(object, SpecialList):
                 self._draw_special_list(object)
 
-    def draw_clear_text(
-            self, pos, text,
-            font='MEDIUM_FONT', color='INPURE_WHITE', align='center'
-            ):
-        screen = self._get_screen()
-        anchor = pygame.Rect(pos, (1, 1))
-        text_surf = FONTS.get(font).render(
-            text, True, COLORS.get(color)
-        )
-        if align == 'center':
-            text_rect = text_surf.get_rect(
-                center=anchor.center
-                )
-        elif align == 'left':
-            text_rect = text_surf.get_rect(
-                midleft=anchor.midleft)
-        elif align == 'right':
-            text_rect = text_surf.get_rect(
-                midright=anchor.midright)
-        screen.blit(text_surf, text_rect)
-
-    def draw_multiline_text(
-            self, pos, text_lines, fsize=40,
-            font='MEDIUM_FONT', color='INPURE_WHITE', align='center'
-            ):
-        for idx, line in enumerate(text_lines):
-            pos_x = pos[0]
-            pos_y = pos[1] + idx * fsize
-            self.draw_clear_text((pos_x, pos_y), line, font, color, align)
-
-    def draw_bg(self):
-        self._get_screen().fill(COLORS.get('BG_COLOR'))
+    # Objects handle
 
     def _draw_game_pokemon_list(self, list_object: GamePokemonList) -> None:
+        """Gets GamePokemonList object and draws it visible flag is True.
+        Otherwise resets events in itself.
+
+        Args:
+            list_object (GamePokemonList): List of playing pokemons.
+        """
         if list_object.get_is_visible():
             self._draw_list(list_object)
         else:
@@ -119,6 +99,11 @@ class Screen:
                 elem._raise_event = False
 
     def _draw_special_list(self, list_object: SpecialList) -> None:
+        """Draws SpecialList with it's elements if it's visible.
+
+        Args:
+            list_object (SpecialList): SpecialList object
+        """
         draw_val = list_object.get_draw_values()
         if list_object.get_is_visible():
             screen = self._get_screen()
@@ -137,6 +122,11 @@ class Screen:
                 screen.blit(elem[1][0], elem[1][1])
 
     def _draw_list(self, list_object: PokemonList) -> None:
+        """_summary_
+
+        Args:
+            list_object (PokemonList): _description_
+        """
         screen = self._get_screen()
         draw_val = list_object.get_draw_values()
         main_frame = draw_val[0]
@@ -167,9 +157,9 @@ class Screen:
         screen = self._get_screen()
         draw_val = button_object.get_draw_values()
         pygame.draw.rect(screen, draw_val[0],
-                         draw_val[1], border_radius=12)
+                        draw_val[1], border_radius=12)
         pygame.draw.rect(screen, draw_val[2],
-                         pygame.Rect(draw_val[3]), 3, border_radius=12)
+                        pygame.Rect(draw_val[3]), 3, border_radius=12)
         screen.blit(draw_val[4], draw_val[5])
 
     def draw_balls(self, object: PokemonBalls, count: int) -> None:
@@ -177,6 +167,133 @@ class Screen:
         draw_vals = object.get_draw_values(count)
         for elem in draw_vals:
             screen.blit(elem[0], elem[1])
+
+    def _check_if_valid_text_args(
+            self,
+            font: Literal['GUI_FONT', 'BIG_FONT', 'MEDIUM_FONT',
+                          'SMALL_FONT', 'SMALLER_FONT'],
+            color: str,
+            align: Literal['center', 'left', 'right']):
+
+        """Checks if given text values are valid. Throws exception
+        if one of them isn't.
+
+        Args:
+            font (str): Text font to check.
+            color (str): Text color to check.
+            align (str): Text alignment to check.
+
+        Raises:
+            RedundantKeyError: Given key is invalid.
+            BadConversionError: Given text is not a string.
+        """
+        try:
+            check_if_valid_key(align, ['center', 'left', 'right'])
+            check_if_valid_key(font, FONTS.keys())
+            check_if_valid_key(color, COLORS.keys())
+        except RedundantKeyError:
+            raise RedundantKeyError('Given key is invalid.')
+
+    # Clear text functions
+
+    def draw_clear_text(
+            self,
+            pos: tuple(float, float),
+            text: str,
+            font: Literal['GUI_FONT', 'BIG_FONT', 'MEDIUM_FONT',
+                          'SMALL_FONT', 'SMALLER_FONT'] = 'MEDIUM_FONT',
+            color: str = 'INPURE_WHITE',
+            align: Literal['center', 'left', 'right'] = 'center'
+            ):
+        """Draws clear text without objects from saved value
+
+        Args:
+            pos (tuple): Text's position
+            text (str): Text to display
+            font (str, optional): Text font.
+            Defaults to 'MEDIUM_FONT'.
+            color (str, optional): Text color.
+            Defaults to 'INPURE_WHITE'.
+            align (str, optional): Text alignment.
+            Defaults to 'center'.
+
+        Raises:
+            RedundantKeyError: Given key is invalid.
+        """
+        try:
+            self._check_if_valid_text_args(font, color, align)
+        except RedundantKeyError:
+            raise RedundantKeyError('Given key is invalid.')
+        screen = self._get_screen()
+        anchor = pygame.Rect(pos, (1, 1))
+        text_surf = FONTS.get(font).render(
+            text, True, COLORS.get(color)
+        )
+        if align == 'center':
+            text_rect = text_surf.get_rect(
+                center=anchor.center
+                )
+        elif align == 'left':
+            text_rect = text_surf.get_rect(
+                midleft=anchor.midleft)
+        elif align == 'right':
+            text_rect = text_surf.get_rect(
+                midright=anchor.midright)
+        screen.blit(text_surf, text_rect)
+
+    def draw_multiline_text(
+            self,
+            pos: tuple[float, float],
+            text_lines,
+            fsize: int = 40,
+            font: Literal['GUI_FONT', 'BIG_FONT', 'MEDIUM_FONT',
+                          'SMALL_FONT', 'SMALLER_FONT'] = 'MEDIUM_FONT',
+            color: str = 'INPURE_WHITE',
+            align: Literal['center', 'left', 'right'] = 'center'
+            ):
+        """Draws list of texts without objects from saved value
+
+        Args:
+            pos (tuple): Text's position
+            text_lines (str): List of texts to display
+            font (str, optional): Text font.
+            fsize (int, optional): Distance between lines.
+            Defaults to 40.
+            Defaults to 'MEDIUM_FONT'.
+            color (str, optional): Text color.
+            Defaults to 'INPURE_WHITE'.
+            align (str, optional): Text alignment.
+            Defaults to 'center'.
+
+        Raises:
+            RedundantKeyError: Given key is invalid.
+        """
+
+        for idx, line in enumerate(text_lines):
+            pos_x = pos[0]
+            pos_y = pos[1] + idx * fsize
+            self.draw_clear_text((pos_x, pos_y), line, font, color, align)
+
+    # Getters
+
+    def get_clock(self) -> pygame.time.Clock:
+        """Gets private value of screen's clock (FPS) and returns it
+
+        Returns:
+            pygame.time.Clock: Active clock object
+        """
+        return self._clock
+
+    # Private getters
+
+    def _get_screen(self) -> pygame.display:
+        """Gets private value of screen display object and returns it
+
+        Returns:
+            pygame.display: Active display
+        """
+        return self._screen
+
 
 
 class PokemonGame:
