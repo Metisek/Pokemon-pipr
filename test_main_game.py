@@ -95,7 +95,8 @@ def main():
                 if pokemon_elem.raise_event():
                     game.change_pokemon_handle(
                         pokemon_elem.get_elem_object(), 2)
-            for special_elem in game.get_object('special_list').get_elem_list():
+            for special_elem in game.get_object(
+                    'special_list').get_elem_list():
                 if special_elem.raise_event():
                     game.special_pokemon_handle(2)
             if game.raised_event('attack_button'):
@@ -136,6 +137,8 @@ def main():
                 game.game_reset()
                 game.set_game_state('main_menu')
                 game.set_menu_state('main_menu')
+
+
 
         # Game draw static objects
 

@@ -757,15 +757,8 @@ class GamePokemon(BasePokemon):
         base_damage = self._base_attack_algorithm(
             enemy_pokemon, stab, critical
             )
-        enemy_types = enemy_pokemon.get_types()
-        type_1 = enemy_types[0]
-        type_2 = 0 if isinstance(
-            enemy_types[1], type(None)
-            ) else enemy_types[1]
-        special_damage_1 = self.get_special_strength_value(type_1)
-        special_damage_2 = self.get_special_strength_value(type_2)
-        special_damage = base_damage * special_damage_1 * special_damage_2
-        return special_damage
+        multiplier = self.get_special_type_multiplier(enemy_pokemon)
+        return base_damage * multiplier
 
     def attack_basic(self, enemy_pokemon):
         attack_type = "basic"
@@ -800,3 +793,16 @@ class GamePokemon(BasePokemon):
         new_defense = ceil(new_defense)
         self.set_defense(new_defense)
         self._set_defense_iter(self._get_defense_iter()+1)
+
+    def get_special_type_multiplier(self, enemy_pokemon) -> float:
+        enemy_types = enemy_pokemon.get_types()
+        type_1 = enemy_types[0]
+        type_2 = 1 if isinstance(
+            enemy_types[1], type(None)
+            ) else enemy_types[1]
+        special_damage_1 = self.get_special_strength_value(type_1)
+        if isinstance(type_2, int):
+            special_damage_2 = type_2
+        else:
+            special_damage_2 = self.get_special_strength_value(type_2)
+        return special_damage_1 * special_damage_2
