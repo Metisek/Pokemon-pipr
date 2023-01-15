@@ -256,13 +256,13 @@ class PokemonGame:
             self.change_given_player_frame(2)
         else:
             player_pokemon = self.get_given_player_active_pokemon(1)
-            random_choice = randint(0, 100)
+            random = randint(0, 100)
             defend_threshold = bot_pokemon.get_hp() / float(
                 bot_pokemon.get_max_hp()) / 2 * 100
             special_threshold = bot_pokemon.get_special_type_multiplier(
-                player_pokemon) * 4 * 100
+                player_pokemon) * 4 * 6
 
-            if random_choice > defend_threshold:
+            if random > defend_threshold:
                 self.attack_pokemon_handle(2)
             elif random_choice > special_threshold:
                 self.block_pokemon_handle(2)
@@ -314,13 +314,17 @@ class PokemonGame:
             self.set_player_turn(2)
             self.set_menu_state('player_two')
 
-    def set_given_player_active_pokemon(self, list_index: int, player: int):
+    def set_given_player_active_pokemon(self,
+                                        list_index: int | None,
+                                        player: int):
         if player == 1:
             self._player_one_active_pokemon = self.get_given_player_poke_list(
-                player)[list_index]
+                player)[list_index] if not isinstance(
+                    list_index, type(None)) else None
         else:
             self._player_two_active_pokemon = self.get_given_player_poke_list(
-                player)[list_index]
+                player)[list_index] if not isinstance(
+                    list_index, type(None)) else None
 
     def get_given_player_active_pokemon(self, player: int) -> GamePokemon:
         if player == 1:
@@ -335,6 +339,7 @@ class PokemonGame:
         self._player_turn = active_player
 
     def game_init_reset(self) -> None:
+        self.set_real_players_count(None)
         self._selected_pokemon = None
         self._selected_frame = None
         self._set_given_player_pokemon_number(1, 1)
@@ -344,11 +349,18 @@ class PokemonGame:
         self.get_exact_object(
             'game_init', 'player_one_init', 'pokemon_list').clear_objects()
         self.get_exact_object(
+            'game_init', 'player_one_init',
+            'remove_pokemon_button').set_object_style('inactive')
+        self.get_exact_object(
             'game_init', 'player_two_init', 'pokemon_list').clear_objects()
+        self.get_exact_object(
+            'game_init', 'player_two_init',
+            'remove_pokemon_button').set_object_style('inactive')
 
     def game_reset(self):
-        self.set_given_player_active_pokemon(0, 1)
-        self.set_given_player_active_pokemon(0, 2)
+        self.set_given_player_active_pokemon(None, 1)
+        self.set_given_player_active_pokemon(None, 2)
+        self._winner = None
         self.game_init_reset()
 
     def pause_resume(self):
