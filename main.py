@@ -6,7 +6,6 @@ from pygame_objects import (
     PokemonBalls,
     PokemonFrame,
     SpecialList,
-    SpecialListElem,
     GamePokemonList
 )
 from attributes import (
@@ -17,13 +16,6 @@ from attributes import (
     COLORS
 )
 from random import randint, choice
-# from classes import (
-#     MalformedPokemonDataError,
-#     DataDoesNotExistError,
-#     BadConversionError,
-#     InvalidDataTypeError,
-#     RedundantKeyError
-# )
 
 from classes import (
     RedundantKeyError,
@@ -31,7 +23,7 @@ from classes import (
 )
 
 from tk_objects import TkPokemonSelectWindow
-from database import PyGameObjectsDatabase, TextDatabase, PokemonDatabase
+from database import PyGameObjectsDatabase, TextDatabase
 from classes import BasePokemon, GamePokemon
 
 
@@ -264,7 +256,7 @@ class PokemonGame:
 
             if random > defend_threshold:
                 self.attack_pokemon_handle(2)
-            elif random_choice > special_threshold:
+            elif random > special_threshold:
                 self.block_pokemon_handle(2)
             else:
                 self.special_pokemon_handle(2)
