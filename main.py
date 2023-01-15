@@ -36,7 +36,8 @@ class Screen:
     def __init__(self) -> None:
         """Initialises main screen with basic parameters set in attributes
         """
-        self._screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self._screen = pygame.display.set_mode(
+            (SCREEN_WIDTH, SCREEN_HEIGHT), flags=0)
         self._clock = pygame.time.Clock()
         pygame.display.set_caption("Pokemon - Mateusz Bojarski")
 
