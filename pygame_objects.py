@@ -1044,7 +1044,7 @@ class SpecialListElem(AbstractFrame):
     """
     def __init__(self,
                  pos: tuple[float, float],
-                 ability: str,
+                 pokemon_type: str,
                  object_style: Literal[
                      'normal', 'inactive',
                      'big', 'big_inactive',
@@ -1055,21 +1055,21 @@ class SpecialListElem(AbstractFrame):
 
         Args:
             pos (tuple[float, float]):  Left x Top position coordinates.
-            ability (str): Given ability's name
+            pokemon_type (str): Given pokemon's type name
             object_style (str, optional): key for object style.
             Defaults to 'no_frame'.
 
         Raises:
             InvalidDataTypeError: Given size or pos is not a tuple or list,
-            or given ability type is invalid.
+            or given pokemon pokemon_type type is invalid.
             InvalidDataLineLeghthError: Given list or tuple size is not equal 2
             BadConversionError: Given float value cannot be mapped to int.
             NotANumberError: Given value is not a number.
             ValueError: Given value is not greater (or equal) 0.
             RedundantKeyError: Given object_style key does not exist.
         """
-        if not isinstance(ability, str):
-            raise InvalidDataTypeError('Given ability type is invalid.')
+        if not isinstance(pokemon_type, str):
+            raise InvalidDataTypeError('Given pokemon_type type is invalid.')
 
         x, y = pos
         size_x = 145
@@ -1083,7 +1083,7 @@ class SpecialListElem(AbstractFrame):
 
         # Core attributes
 
-        self._ability = ability
+        self._pokemon_type = pokemon_type
         self._is_pressed = False
 
     # Main functions
@@ -1136,37 +1136,38 @@ class SpecialListElem(AbstractFrame):
 
     # Getters
 
-    def get_ability_text(self) -> str:
-        """ Gets private value os ability's name and returns it
+    def get_type_text(self) -> str:
+        """ Gets private value of pokemon type and returns it
 
         Returns:
-            str: Ability's name
+            str: Pokemon type
         """
-        return self._ability
+        return self._pokemon_type
 
     # Private getters
 
-    def _get_elem_texts(self, index) -> None:
+    def _get_elem_texts(self, index) -> tuple[()] | tuple[
+            pygame.surface.Surface, pygame.rect.Rect]:
         """Gets every single text with variables and sets tuple
         of Surface and Rect: tuple[
             pygame.surface.Surface, pygame.rect.Rect]
         """
         # Init variables
-        if not self.get_ability_text():
+        if not self.get_type_text():
             return ()
         main_color = self.get_color('font_color')
         main_font = FONTS.get('SMALL_FONT')
         x, y = self.get_pos()
-        ability_text = self.get_ability_text()
-        ability_surf = main_font.render(
-            ability_text, True, main_color)
-        ability_rect = ability_surf.get_rect(
+        type_text = self.get_type_text().title()
+        type_surf = main_font.render(
+            type_text, True, main_color)
+        type_rect = type_surf.get_rect(
             center=(x + 72 + index % 2 * 145, y + 35 + index // 2 * 70))
-        return [ability_surf, ability_rect]
+        return [type_surf, type_rect]
 
     # Setters
 
-    def set_ability_text(self, ability: str) -> None:
+    def set_ability_text(self, pokemon_type: str) -> None:
         """ Sets private value of ability's name and updates it.
         Throws exception if given type is not str.
 
@@ -1176,9 +1177,9 @@ class SpecialListElem(AbstractFrame):
         Raises:
             InvalidDataTypeError: Given ability type is not string.
         """
-        if not isinstance(ability, str):
+        if not isinstance(pokemon_type, str):
             raise InvalidDataTypeError('Given ability type is not string.')
-        self._ability = ability
+        self._pokemon_type = pokemon_type
 
     def set_active_frame_colors(self) -> None:
         """Changes given object colors to its 'active' values
@@ -1223,7 +1224,7 @@ class SpecialList(AbstractFrame):
         """
         x, y = pos
         size_x = 300
-        size_y = 150
+        size_y = 80
 
         super().__init__((size_x, size_y), (x + 5, y + 5), object_style)
 
@@ -1328,8 +1329,9 @@ class SpecialList(AbstractFrame):
         if not isinstance(pokemon, GamePokemon):
             raise InvalidObjectTypeError('Given object is not GamePokemon.')
         elem_list = []
-        for elem in pokemon.get_abilities():
-            elem_list.append(SpecialListElem(self.get_pos(), str(elem)))
+        for elem in pokemon.get_types():
+            if elem:
+                elem_list.append(SpecialListElem(self.get_pos(), str(elem)))
         self._elem_list = elem_list
 
     def set_list_pos(self, pos: tuple[int, int]) -> None:

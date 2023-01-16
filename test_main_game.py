@@ -59,9 +59,14 @@ def main():
         m_state = game.get_menu_state()
 
         if m_state == 'player_one':
-            for special_elem in game.get_object('special_list').get_elem_list():
+            for special_elem in game.get_object(
+                        'special_list').get_elem_list():
                 if special_elem.raise_event():
-                    game.special_pokemon_handle(1)
+                    pokemon_type = special_elem.get_type_text()
+                    type_number = game.get_given_player_pokemon_type_index(
+                        1, pokemon_type
+                    )
+                    game.special_pokemon_handle(1, type_number)
             for pokemon_elem in game.get_object(
                     'game_pokemon_list').get_elem_list():
                 if pokemon_elem.raise_event():
@@ -98,7 +103,10 @@ def main():
             for special_elem in game.get_object(
                     'special_list').get_elem_list():
                 if special_elem.raise_event():
-                    game.special_pokemon_handle(2)
+                    pokemon_type = special_elem.get_type_text()
+                    type_number = game.get_given_player_pokemon_type_index(
+                        2, pokemon_type
+                    )
             if game.raised_event('attack_button'):
                 game.attack_pokemon_handle(2)
             elif game.raised_event('special_button'):

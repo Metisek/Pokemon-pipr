@@ -477,17 +477,18 @@ class PokemonGame:
         self.get_object('block_button').reset_event()
         self.update_turn(player)
 
-    def special_pokemon_handle(self, player: int):
+    def special_pokemon_handle(self, player: int, type: int):
         """ Attacks pokemon with given player's pokemon to opposing one
         using speical types.
         Triggers dead pokemon handle if given attack is fatal and updates
         turn after attack.
 
         Args:
-            player (int): Player's number
+            player (int): Player number
+            type (int): Player pokemon type index (0 or 1)
         """
         enemy, p_pokemon, e_pokemon = self._get_pokemons_and_enemy(player)
-        p_pokemon.attack_special(e_pokemon)
+        p_pokemon.attack_special(e_pokemon, type)
         for elem in self.get_object('special_list').get_elem_list():
             elem.reset_event()
         self.update_turn(player)
@@ -638,6 +639,7 @@ class PokemonGame:
            if active pokemon is alive is prohibited.
         """
         bot_pokemon = self.get_given_player_active_pokemon(2)
+
         if bot_pokemon.get_is_alive() is False:
             self.remove_pokemon_from_player(bot_pokemon, 2)
             self.set_given_player_active_pokemon(randint(0, len(
@@ -645,18 +647,30 @@ class PokemonGame:
             self.change_given_player_frame(2)
         else:
             player_pokemon = self.get_given_player_active_pokemon(1)
+            bot_types = bot_pokemon.get_types()
+            if bot_types[1]:
+                if bot_pokemon.get_special_type_multiplier(
+                    player_pokemon, 0
+                ) > bot_pokemon.get_special_type_multiplier(
+                        player_pokemon, 1
+                ):
+                    bot_special_type = 0
+                else:
+                    bot_special_type = 1
+            else:
+                bot_special_type = 0
             random = randint(0, 100)
             defend_threshold = bot_pokemon.get_hp() / float(
                 bot_pokemon.get_max_hp()) / 2 * 100
             special_threshold = bot_pokemon.get_special_type_multiplier(
-                player_pokemon) * 4 * 6
+                player_pokemon, bot_special_type) * 24
 
             if random > defend_threshold:
                 self.attack_pokemon_handle(2)
             elif random > special_threshold:
                 self.block_pokemon_handle(2)
             else:
-                self.special_pokemon_handle(2)
+                self.special_pokemon_handle(2, bot_special_type)
 
     # Game reset functions
 
@@ -941,6 +955,29 @@ class PokemonGame:
         """
         return self._winner
 
+    def get_given_player_pokemon_type_index(self,
+                                            player: int,
+                                            pokemon_type: str) -> int:
+        """ Gets index of given pokemon type in player active pokemon.
+        Throws exception if it's invalid.
+
+        Args:
+            player (int): Player's number.
+            pokemon_type (str): Given pokemon type.
+
+        Raises:
+            RedundantKeyError: Given pokemon type is invalid.
+
+        Returns:
+            int: Index of pokemon type.
+        """
+        for idx, p_type in enumerate(self.get_given_player_active_pokemon(
+                player).get_types()):
+            if isinstance(p_type, str) and p_type == pokemon_type:
+                return idx
+        else:
+            raise RedundantKeyError('Given pokemon type is invalid.')
+
     def get_game_state(self) -> str:
         """Gets current game state and returns it as str.
 
@@ -1181,7 +1218,11 @@ def main():
                 for special_elem in game.get_object(
                         'special_list').get_elem_list():
                     if special_elem.raise_event():
-                        game.special_pokemon_handle(1)
+                        pokemon_type = special_elem.get_type_text()
+                        type_number = game.get_given_player_pokemon_type_index(
+                            1, pokemon_type
+                        )
+                        game.special_pokemon_handle(1, type_number)
                 for pokemon_elem in game.get_object(
                         'game_pokemon_list').get_elem_list():
                     if pokemon_elem.raise_event():
@@ -1210,40 +1251,43 @@ def main():
                     )
 
             elif m_state == 'player_two':
-                if game.get_real_players_count() == 2:
-                    for pokemon_elem in game.get_object(
-                            'game_pokemon_list').get_elem_list():
-                        if pokemon_elem.raise_event():
-                            game.change_pokemon_handle(
-                                pokemon_elem.get_elem_object(), 2)
-                    for special_elem in game.get_object(
-                            'special_list').get_elem_list():
-                        if special_elem.raise_event():
-                            game.special_pokemon_handle(2)
-                    if game.raised_event('attack_button'):
-                        game.attack_pokemon_handle(2)
-                    elif game.raised_event('special_button'):
-                        game.get_object('special_list').set_elem_list(
-                            game.get_given_player_active_pokemon(2)
+                for pokemon_elem in game.get_object(
+                        'game_pokemon_list').get_elem_list():
+                    if pokemon_elem.raise_event():
+                        game.change_pokemon_handle(
+                            pokemon_elem.get_elem_object(), 2)
+                for special_elem in game.get_object(
+                        'special_list').get_elem_list():
+                    if special_elem.raise_event():
+                        pokemon_type = special_elem.get_type_text()
+                        type_number = game.get_given_player_pokemon_type_index(
+                            2, pokemon_type
                         )
-                        game.get_object(
-                            'game_pokemon_list').set_is_visible(False)
-                        game.get_object('special_list').set_is_visible(
-                            not game.get_object(
-                                'special_list').get_is_visible()
-                        )
-                    elif game.raised_event('block_button'):
-                        game.block_pokemon_handle(2)
+                        game.special_pokemon_handle(2)
+                if game.raised_event('attack_button'):
+                    game.attack_pokemon_handle(2)
+                elif game.raised_event('special_button'):
+                    game.get_object('special_list').set_elem_list(
+                        game.get_given_player_active_pokemon(2)
+                    )
+                    game.get_object(
+                        'game_pokemon_list').set_is_visible(False)
+                    game.get_object('special_list').set_is_visible(
+                        not game.get_object(
+                            'special_list').get_is_visible()
+                    )
+                elif game.raised_event('block_button'):
+                    game.block_pokemon_handle(2)
 
-                    elif game.raised_event('change_pokemon_button'):
-                        game.get_object('game_pokemon_list').set_elem_list(
-                            game.get_given_player_poke_list(2)
-                        )
-                        game.get_object('special_list').set_is_visible(False)
-                        game.get_object('game_pokemon_list').set_is_visible(
-                            not game.get_object(
-                                'game_pokemon_list').get_is_visible()
-                        )
+                elif game.raised_event('change_pokemon_button'):
+                    game.get_object('game_pokemon_list').set_elem_list(
+                        game.get_given_player_poke_list(2)
+                    )
+                    game.get_object('special_list').set_is_visible(False)
+                    game.get_object('game_pokemon_list').set_is_visible(
+                        not game.get_object(
+                            'game_pokemon_list').get_is_visible()
+                    )
 
             elif m_state == 'pause':
                 if game.raised_event('continue_button'):

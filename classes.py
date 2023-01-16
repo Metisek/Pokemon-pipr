@@ -894,15 +894,17 @@ class GamePokemon(BasePokemon):
         enemy_pokemon._take_damage(damage)
         self._set_stab('attack')
 
-    def attack_special(self, enemy_pokemon) -> None:
+    def attack_special(self, enemy_pokemon, p_type: int) -> None:
         """ Gets values for attacking enemy pokemon with it's types
         and attacks it rounding calculated value up, lowering it's HP.
 
         Args:
             enemy_pokemon (GamePokemon): Enemy pokemon for attacking.
+            type (int): Player pokemon type (0 or 1)
 
         Raises:
             InvalidObjectTypeError: Given object is not valid pokemon type.
+            InvalidDataTypeError Given number is invalid.
         """
         if not isinstance(enemy_pokemon, GamePokemon):
             raise InvalidObjectTypeError(
@@ -911,7 +913,7 @@ class GamePokemon(BasePokemon):
         critical = 2 if randint(0, 100) < 10 else 1
         damage = ceil(self._base_attack_algorithm(
             enemy_pokemon, stab, critical
-            ) * self.get_special_type_multiplier(enemy_pokemon))
+            ) * self.get_special_type_multiplier(enemy_pokemon, p_type))
         enemy_pokemon._take_damage(damage)
         self._set_stab('special')
 
@@ -926,31 +928,28 @@ class GamePokemon(BasePokemon):
         self._set_defense_iter(defense_iter * 0.9)
         self._set_stab('block')
 
-    def get_special_type_multiplier(self, enemy_pokemon) -> float:
-        """Gets attack multiplier from enemy pokemon types
+    def get_special_type_multiplier(self, enemy_pokemon, p_type) -> float:
+        """Gets attack multiplier from enemy pokemon type
         and returns it as a float number.
 
         Args:
             enemy_pokemon (GamePokemon): Enemy pokemon for reading
             it's types.
+            type (int): Player pokemon type (0 or 1)
 
         Raises:
             InvalidObjectTypeError: Given object is not valid pokemon type.
+            InvalidDataTypeError Given number is invalid.
 
         Returns:
             float: Special attack multiplier.
         """
+
         if not isinstance(enemy_pokemon, GamePokemon):
             raise InvalidObjectTypeError(
                 'Given object is not valid pokemon type')
-        enemy_types = enemy_pokemon.get_types()
-        type_1 = enemy_types[0]
-        type_2 = 1 if isinstance(
-            enemy_types[1], type(None)
-            ) else enemy_types[1]
-        special_damage_1 = self.get_special_strength_value(type_1)
-        if isinstance(type_2, int):
-            special_damage_2 = type_2
-        else:
-            special_damage_2 = self.get_special_strength_value(type_2)
-        return float(special_damage_1 * special_damage_2)
+        if not isinstance(p_type, int) or p_type not in range(0, 2):
+            raise InvalidDataTypeError('Given number is invalid.')
+        player_type = self.get_types()[p_type]
+        multiplier = enemy_pokemon.get_special_strength_value(player_type)
+        return float(multiplier)
