@@ -3,14 +3,22 @@ import os
 
 pygame.init()
 
+# PyGame window init size and frames per seconf
+
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-
 FPS = 30
+
+# PyGame photo objects
 
 FRAME_PATH = os.path.join('assets', 'pokemon_frame.png')
 FRAME_IMAGE = pygame.image.load(FRAME_PATH)
+
+# Pokemon's database JSON path
+
 DATABASE_PATH = 'pokemon.json'
+
+# PyGame objects global constant values
 
 COLORS = {
     'BG_COLOR': (25, 25, 45),

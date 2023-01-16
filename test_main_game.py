@@ -4,7 +4,7 @@ from attributes import (
     FPS,
 )
 
-from main import PokemonGame, Screen, TkPokemonSelectWindow, TextDatabase
+from main import PokemonGame, Screen
 
 # from classes import (
 #     RedundantKeyError
@@ -14,8 +14,8 @@ from classes import GamePokemon
 from database import PokemonDatabase
 
 database = PokemonDatabase('pokemon.json')
-pokemon1 = GamePokemon(database.get_pokemon_using_pokedex_number(16))
-pokemon2 = GamePokemon(database.get_pokemon_using_pokedex_number(30))
+pokemon1 = GamePokemon(database.get_pokemon_using_pokedex_number(6))
+pokemon2 = GamePokemon(database.get_pokemon_using_pokedex_number(27))
 pokemon3 = GamePokemon(database.get_pokemon_using_pokedex_number(55))
 pokemon4 = GamePokemon(database.get_pokemon_using_pokedex_number(1))
 
@@ -59,9 +59,14 @@ def main():
         m_state = game.get_menu_state()
 
         if m_state == 'player_one':
-            for special_elem in game.get_object('special_list').get_elem_list():
+            for special_elem in game.get_object(
+                        'special_list').get_elem_list():
                 if special_elem.raise_event():
-                    game.special_pokemon_handle(1)
+                    pokemon_type = special_elem.get_type_text()
+                    type_number = game.get_given_player_pokemon_type_index(
+                        1, pokemon_type
+                    )
+                    game.special_pokemon_handle(1, type_number)
             for pokemon_elem in game.get_object(
                     'game_pokemon_list').get_elem_list():
                 if pokemon_elem.raise_event():
@@ -95,9 +100,14 @@ def main():
                 if pokemon_elem.raise_event():
                     game.change_pokemon_handle(
                         pokemon_elem.get_elem_object(), 2)
-            for special_elem in game.get_object('special_list').get_elem_list():
+            for special_elem in game.get_object(
+                    'special_list').get_elem_list():
                 if special_elem.raise_event():
-                    game.special_pokemon_handle(2)
+                    pokemon_type = special_elem.get_type_text()
+                    type_number = game.get_given_player_pokemon_type_index(
+                        2, pokemon_type
+                    )
+                    game.special_pokemon_handle(2, type_number)
             if game.raised_event('attack_button'):
                 game.attack_pokemon_handle(2)
             elif game.raised_event('special_button'):

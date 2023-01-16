@@ -112,7 +112,7 @@ def test_database_search_database_string_empty():
     database = load_correct_database()
     substring = ""
     search_result = database.search_database(substring)
-    assert isinstance(search_result, type(None))
+    assert len(search_result) > 100
 
 
 def test_database_search_database_number_typical():
@@ -277,7 +277,7 @@ def test_search_database_string_name_empty():
     database = load_correct_database()
     name = ''
     pokemon_search_result = database.search_database(name)
-    assert isinstance(pokemon_search_result, type(None))
+    assert len(pokemon_search_result) > 100
 
 
 def test_search_database_string_name_does_not_exist():
