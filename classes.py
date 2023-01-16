@@ -865,7 +865,7 @@ class GamePokemon(BasePokemon):
             BadConversionError: Float cannot be mapped (rounded) to int
             in this object.
         """
-        value = self._return_if_positive(self._convert_to_int(value))
+        value = self._return_if_not_negative(self._convert_to_int(value))
         new_hp = self.get_hp() - value
         if new_hp < 0:
             new_hp = 0
@@ -911,7 +911,7 @@ class GamePokemon(BasePokemon):
         critical = 2 if randint(0, 100) < 10 else 1
         damage = ceil(self._base_attack_algorithm(
             enemy_pokemon, stab, critical
-            ))
+            ) * self.get_special_type_multiplier(enemy_pokemon))
         enemy_pokemon._take_damage(damage)
         self._set_stab('special')
 

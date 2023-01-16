@@ -1,13 +1,40 @@
-# Pokemon
+# Pokemon - Projekt PIPR 2022
 
 
 
-## Getting started
+## Wstęp
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Projekt stanowi symulator walk pokemonów korzystając z danych dołączonych do zadania (znajdujacych się w katalogu "reference"), przekonwertowanych na plik JSON.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Program umożliwia grę dwóch użytkowników i grę przeciwko komputerowi który wykonuje logiczne ruchy zgodnie z algorytmem ataków. Walka odbywa się jak w oryginalnej serii gier pokemon - po kolei, w każdej rundzie oba pokemony obydwu graczy walczą ze sobą 1vs1, a walka odbywa się w sposób turowy.
 
+## Założenia konceptu
+
+Program został napisany obiektowo w środowisku graficznym wykorzystując bibliotekę PyGame oraz Tk do rysowania okna. Każdy interaktywny obiekt gry, ze względu na brak wsparcia w domyślnej bibliotece, posiada własne funkcje rzucające eventy, które są obsługiwane w głównej pętli programu.
+
+Program dodatkowo umożlwiwa wielokrotną grę podczas jednej sesji, a okna są odpowiednio ustawiane z pomocą zmiennych wybierającej obecny stan gry oraz menu.
+
+## Inicjacja gry
+
+Symulator przyjmuje pokemony obydwu graczy (od 1 do 6), a w przypadku gdy drugim graczem jest komputer wybiera on losowo z bazy danych pokemony w takiej samej ilości, co posiada pierwszy gracz.
+
+Pokemony można dowolnie dodawać i usuwać z listy, a dodawanie pokemona odbywa sie na podstawie wyskakującego okienka blokującego okno główne, w którym możemy wybrać dowolnego z ponad 800 pokemonów z listy. Można ową listę również filtrować po nazwie oraz ID pokemona, aczkolwiek nie trzeba dodawać pełnej nazwy by wybranego pokemona wyszukać.
+
+Gra może zostać zainicjowana dalej tylko w momencie, gdy liczba wybranych pokemonów pokrywa się z liczbą pokeballi.
+
+## Walka
+
+Walka odbywa się jak w oryginalnej serii - po kolei, w każdej rundzie trener desygnuje 1 pokemona do walki 1vs1. Walka odbywa się w sposób turowy.
+
+Możliwy jest wybór 4 różnych akcji:
+
+- Block - zwiększenie współczynnika obrony o 10% * 0.9^n, gdzie n to liczba, ile razy użyto bloku dla danego pokemona, zaczynając od 0. Ma to unimożliwić 'snowballowanie' w nieskończoność współczynnika obrony, zwłaszcza w przypadku potężniejszych pokemonów.
+- Attack - atak przeciwnego pokemona atakiem normalnym. Wartość ta jestwyliczana na podstawie nieco zmodyfikowanego algorytmu z [Bulbapedii](https://bulbapedia.bulbagarden.net/wiki/Damage), bez wykorzystywania współczynników dla typów przeciwnego pokemona. Wartość obrażeń jest zawsze zaokrąglana w góre do wartości całkowitej.
+atak specjalny - atak wykorzystujący "typ" pokemona. (Jeżeli pokemon posiada więcej niż 1 typ należy zapewnić możliwość wybory typu.)
+wycofanie pokemona - podmiana pokemona na innego z drużyny
+Po kapitulacji jednego pokemona (jego hp spada do 0), na jego miejsce do walki wskakuje kolejny. Uwaga jeżeli pokemon zostanie wycofany, jego statystyki zostają zapisane (otrzymane obrażenia / zwiększona obrona). Program powinien umożliwiać grę dwóch użytkowników i grę przeciwko komputerowi który wykonuje logiczne ruchy.
+
+Do obliczania obrażeń ataku pokemona można wykorzystać informacje z bulbapedii link. Należy wciąć pod uwagę typ ataku i odporność atakowanego pokemona na dany typ, oraz odpowiednie współczynnikii ataku i obrony.
 ## Add your files
 
 - [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files

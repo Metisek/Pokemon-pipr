@@ -14,8 +14,8 @@ from classes import GamePokemon
 from database import PokemonDatabase
 
 database = PokemonDatabase('pokemon.json')
-pokemon1 = GamePokemon(database.get_pokemon_using_pokedex_number(16))
-pokemon2 = GamePokemon(database.get_pokemon_using_pokedex_number(30))
+pokemon1 = GamePokemon(database.get_pokemon_using_pokedex_number(6))
+pokemon2 = GamePokemon(database.get_pokemon_using_pokedex_number(27))
 pokemon3 = GamePokemon(database.get_pokemon_using_pokedex_number(55))
 pokemon4 = GamePokemon(database.get_pokemon_using_pokedex_number(1))
 
