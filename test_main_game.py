@@ -4,7 +4,7 @@ from attributes import (
     FPS,
 )
 
-from main import PokemonGame, Screen, TkPokemonSelectWindow, TextDatabase
+from main import PokemonGame, Screen
 
 # from classes import (
 #     RedundantKeyError
@@ -146,8 +146,6 @@ def main():
                 game.game_reset()
                 game.set_game_state('main_menu')
                 game.set_menu_state('main_menu')
-
-
 
         # Game draw static objects
 
