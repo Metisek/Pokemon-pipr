@@ -261,7 +261,7 @@ def io_return_valid_special_strength_dict(value: dict) -> dict:
                     "against_dragon":     float | int -> float | str -> float,
                     "against_electric":   float | int -> float | str -> float,
                     "against_fairy":      float | int -> float | str -> float,
-                    "against_fight":      float | int -> float | str -> float,
+                    "against_fighting":   float | int -> float | str -> float,
                     "against_fire":       float | int -> float | str -> float,
                     "against_flying":     float | int -> float | str -> float,
                     "against_ghost":      float | int -> float | str -> float,
@@ -290,7 +290,7 @@ def io_return_valid_special_strength_dict(value: dict) -> dict:
     special_stregnth_keys = [
                              "against_bug", "against_dark",
                              "against_dragon", "against_electric",
-                             "against_fairy", "against_fight",
+                             "against_fairy", "against_fighting",
                              "against_fire", "against_flying",
                              "against_ghost", "against_grass",
                              "against_ground", "against_ice",

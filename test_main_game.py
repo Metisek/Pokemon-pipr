@@ -107,6 +107,7 @@ def main():
                     type_number = game.get_given_player_pokemon_type_index(
                         2, pokemon_type
                     )
+                    game.special_pokemon_handle(2, type_number)
             if game.raised_event('attack_button'):
                 game.attack_pokemon_handle(2)
             elif game.raised_event('special_button'):

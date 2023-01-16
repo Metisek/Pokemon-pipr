@@ -28,10 +28,10 @@ Walka odbywa się jak w oryginalnej serii - po kolei, w każdej rundzie trener d
 
 Możliwy jest wybór 4 różnych akcji:
 
-- Block - zwiększenie współczynnika obrony o 10% * 0.9^n, gdzie n to liczba, ile razy użyto bloku dla danego pokemona, zaczynając od 0. Ma to unimożliwić 'snowballowanie' w nieskończoność współczynnika obrony, zwłaszcza w przypadku potężniejszych pokemonów.
-- Attack - atak przeciwnego pokemona atakiem normalnym. Wartość ta jestwyliczana na podstawie nieco zmodyfikowanego algorytmu z [Bulbapedii](https://bulbapedia.bulbagarden.net/wiki/Damage), bez wykorzystywania współczynników dla typów przeciwnego pokemona. Wartość obrażeń jest zawsze zaokrąglana w góre do wartości całkowitej.
-atak specjalny - atak wykorzystujący "typ" pokemona. (Jeżeli pokemon posiada więcej niż 1 typ należy zapewnić możliwość wybory typu.)
-wycofanie pokemona - podmiana pokemona na innego z drużyny
+- Block - zwiększenie współczynnika obrony o 10% * 0.9^n, gdzie n to liczba, ile razy użyto bloku dla danego pokemona, zaczynając od 0. Ma to unimożliwić 'snowballowanie' w nieskończoność współczynnika obrony, zwłaszcza w przypadku potężniejszych pokemonów. Bot wykorzystuje ten najczęściej gdy HP jego pokemon a jest wysokie, a z czasem jak spada częstotliwość występowania bloków zanika.
+- Attack - atak przeciwnego pokemona atakiem normalnym. Wartość ta jestwyliczana na podstawie nieco zmodyfikowanego algorytmu z [Bulbapedii](https://bulbapedia.bulbagarden.net/wiki/Damage), bez wykorzystywania współczynników dla typów przeciwnego pokemona. Wartość obrażeń jest zawsze zaokrąglana w góre do wartości całkowitej. Jest to domyślny ruch bota.
+- Special - atak wykorzystujący "typ" pokemona. Bierze on ze swojej listy typów jego rodzaj, a następnie bierze wartość ze słownika słabości pokemona przeciwnika, by wyliczyć mnożnik obarżeń. Typ specjalnego ataku pokemona można zawsze wybrać. Bot wkonuje ten ruch najczęściej przy wysokim mnożniku, a jeśli jest równy 0 to nigdy, a w przypadku 2 typów zawsze wybiera ten najlepszy.
+- Change pokemon - podmiana pokemona na innego z drużyny
 Po kapitulacji jednego pokemona (jego hp spada do 0), na jego miejsce do walki wskakuje kolejny. Uwaga jeżeli pokemon zostanie wycofany, jego statystyki zostają zapisane (otrzymane obrażenia / zwiększona obrona). Program powinien umożliwiać grę dwóch użytkowników i grę przeciwko komputerowi który wykonuje logiczne ruchy.
 
 Do obliczania obrażeń ataku pokemona można wykorzystać informacje z bulbapedii link. Należy wciąć pod uwagę typ ataku i odporność atakowanego pokemona na dany typ, oraz odpowiednie współczynnikii ataku i obrony.

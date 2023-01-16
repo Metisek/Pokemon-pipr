@@ -829,30 +829,6 @@ class GamePokemon(BasePokemon):
             ) * stab * random_value
         return damage_base
 
-    def _special_attack_algotithm(
-            self,
-            enemy_pokemon,
-            stab: float,
-            critical: int
-            ) -> float:
-        """ Gets base values from base attack algorithm and multiplies it
-        by given special attacks types and retruns it without rounding.
-
-        Args:
-            enemy_pokemon (GamePokemon): Enemy pokemon given for it's
-            defense value.
-            stab (float): Same-Type Attack Bonus multiplier .
-            critical (int): Critical hit multiplier.
-
-        Returns:
-            float: Calculated damage without rounding.
-        """
-        base_damage = self._base_attack_algorithm(
-            enemy_pokemon, stab, critical
-            )
-        multiplier = self.get_special_type_multiplier(enemy_pokemon)
-        return base_damage * multiplier
-
     def _take_damage(self, value: int) -> None:
         """ Reduces hp from itself from enemy pokemon's attack.
 
