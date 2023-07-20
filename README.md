@@ -34,8 +34,3 @@ Możliwy jest wybór 4 różnych akcji:
 - Change pokemon - podmiana pokemona na innego z drużyny Po śmierci walczącego pokemona, jeśli gracz posiada żyjące pokemony, należy wybrać nowego żyjącego pokemona do walki. Można również zachować pokemona i wyminić go na innego, zachowując jego statystyki. Bot nie może wycofać pokemona w trakcie gry, a po śmierci aktywnego zastępuje nieżyjącego pokemona losowym innym z żyjących.
 
 Gra się kończy w momencie, gdy dany gracz nie posiada więcej żyjących pokemonów.
-
-## Podsumowanie i samoocena
-Pomimo, że na pewno nie jest to najlepsza gra z pokemonami w roli głównej (nie zaimplementowałem np.: zdjęć dla tych 800 pokemonów), uważam sam projekt za jak najbardziej udany, a efekt końcowy na oddanie projektu do oceny moim zdaniem sprawia przyjemność z korzystania, zwłaszcza po tak wielkiej włożonej w niego pracy. Być może w wolnym czasie będę ten projekt edytował poza zaliczeniem, wprowadzając np.: tabelkę umiejętności (której zalążek istnieł przez zdecydowaną większość projektu), animacje, czy wyskakujące okienka dialogowe.
-
-Uwzględniając funkcjonalność programu, czytelność kodu oraz wykonaną dokumentacje i testy uważam, że projekt zasługuje na wysoką ocenę, na którą będąc szczerym liczę.
